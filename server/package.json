@@ -3,8 +3,11 @@
   "version": "1.0.0",
   "description": "Backend For RecipeVault",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js",
+    "dev": "nodemon index.js"
   },
   "author": "AMRITH,SIDDHARTHA",
   "license": "ISC",
@@ -14,5 +17,8 @@
     "express": "^4.21.2",
     "mongodb": "^6.13.0",
     "mongoose": "^8.10.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
   }
 }
