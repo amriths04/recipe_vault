@@ -37,7 +37,6 @@ yarn-error.*
 
 app-example
 
-# dotenv environment variables file
+# local env files
 .env
-.env.test
-.env.production
+.env*.local
