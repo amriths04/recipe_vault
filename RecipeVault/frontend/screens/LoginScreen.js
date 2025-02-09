@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import {
   View,
   Text,
@@ -9,9 +9,12 @@ import {
   Easing,
   Alert,
 } from "react-native";
-import { loginUser } from "../connection/authService";
+import { loginUser } from "../services/authService";
+import { AuthContext } from "../context/AuthContext";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function LoginScreen({ navigation }) {
+  const { login } = useContext(AuthContext);
   const [isLogin, setIsLogin] = useState(true);
   const fadeAnim = new Animated.Value(1);
 
@@ -59,8 +62,11 @@ export default function LoginScreen({ navigation }) {
 
     try {
       const response = await loginUser(formData.email, formData.password);
-
-      if (response.success) {
+  
+      if (response?.accessToken) {
+        await AsyncStorage.setItem("userToken", response.accessToken); // ✅ Store token
+        console.log("✅ Token saved:", response.accessToken);
+        login(response.user, response.accessToken); // Save login state globally
         Alert.alert("Success", "Login successful!");
         navigation.navigate("Landing");
       } else {
