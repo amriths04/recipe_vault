@@ -11,7 +11,10 @@ export default function HomeScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Recipe Vault</Text>
+      {/* Recipe Book Effect */}
+      <View style={styles.bookContainer}>
+        <Text style={styles.title}>📖 Recipe Vault</Text>
+      </View>
     </View>
   );
 }
@@ -21,11 +24,23 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#007bff", // Blue background
+    backgroundColor: "#2c3e50", // Dark background like the sidebar
+  },
+  bookContainer: {
+    width: 280,
+    paddingVertical: 40,
+    paddingHorizontal: 20,
+    backgroundColor: "#f8f1e1", // Light parchment-like color
+    borderRadius: 10,
+    elevation: 5, // Shadow effect
+    borderWidth: 2,
+    borderColor: "#d2a679", // Light brown like an old book
+    alignItems: "center",
   },
   title: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: "bold",
-    color: "#fff",
+    color: "#3d2b1f", // Dark brown for classic feel
+    textAlign: "center",
   },
 });
