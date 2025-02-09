@@ -7,13 +7,15 @@ import {
   StyleSheet,
   Animated,
   Easing,
+  Alert,
 } from "react-native";
+import { loginUser } from "../connection/authService";
 
 export default function LoginScreen({ navigation }) {
   const [isLogin, setIsLogin] = useState(true);
   const fadeAnim = new Animated.Value(1);
 
-  // Form Data (Step 1 for Register)
+  // Form Data (Step 1 for Register & Login)
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -48,52 +50,74 @@ export default function LoginScreen({ navigation }) {
     navigation.navigate("RegisterStep2", { formData });
   };
 
+  // Handle "Login" Press
+  const handleLoginPress = async () => {
+    if (!formData.email || !formData.password) {
+      Alert.alert("Error", "Please enter both email and password.");
+      return;
+    }
+
+    try {
+      const response = await loginUser(formData.email, formData.password);
+
+      if (response.success) {
+        Alert.alert("Success", "Login successful!");
+        navigation.navigate("Landing");
+      } else {
+        Alert.alert("Login Failed", response.error || "Invalid credentials");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      Alert.alert("Error", "Something went wrong. Please try again.");
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{isLogin ? "Login" : "Register"}</Text>
 
-            {/* Always show login fields */}
-            <TextInput
-                style={styles.input}
-                placeholder="Email"
-                keyboardType="email-address"
-                placeholderTextColor="#666"
-        value={formData.email}  // ✅ Ensure value is set
-        onChangeText={(text) => setFormData({ ...formData, email: text })}  // ✅ Update state
+      {/* Always show login fields */}
+      <TextInput
+        style={styles.input}
+        placeholder="Email"
+        keyboardType="email-address"
+        placeholderTextColor="#666"
+        value={formData.email}
+        onChangeText={(text) => setFormData({ ...formData, email: text })}
       />
-            <TextInput
-                style={styles.input}
-                placeholder="Password"
-                secureTextEntry
-                placeholderTextColor="#666"
-        value={formData.password}  // ✅ Ensure value is set
-        onChangeText={(text) => setFormData({ ...formData, password: text })}  // ✅ Update state
+      <TextInput
+        style={styles.input}
+        placeholder="Password"
+        secureTextEntry
+        placeholderTextColor="#666"
+        value={formData.password}
+        onChangeText={(text) => setFormData({ ...formData, password: text })}
       />
 
-            {/* Registration fields only in Register mode */}
-            {!isLogin && (
-                <Animated.View style={{ opacity: fadeAnim }}>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Username"
-                        placeholderTextColor="#666"
-                        value={formData.username}  // ✅ Ensure value is set
-                        onChangeText={(text) => setFormData({ ...formData, username: text })}  // ✅ Update state
-                    />
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Phone"
-                        keyboardType="phone-pad"
-                        placeholderTextColor="#666"
-                        value={formData.phone}  // ✅ Ensure value is set
-                        onChangeText={(text) => setFormData({ ...formData, phone: text })}  // ✅ Update state
+      {/* Registration fields only in Register mode */}
+      {!isLogin && (
+        <Animated.View style={{ opacity: fadeAnim }}>
+          <TextInput
+            style={styles.input}
+            placeholder="Username"
+            placeholderTextColor="#666"
+            value={formData.username}
+            onChangeText={(text) => setFormData({ ...formData, username: text })}
           />
-                </Animated.View>
-            )}
+          <TextInput
+            style={styles.input}
+            placeholder="Phone"
+            keyboardType="phone-pad"
+            placeholderTextColor="#666"
+            value={formData.phone}
+            onChangeText={(text) => setFormData({ ...formData, phone: text })}
+          />
+        </Animated.View>
+      )}
 
       {/* Login/Register Button */}
       {isLogin ? (
-        <TouchableOpacity style={styles.button}>
+        <TouchableOpacity style={styles.button} onPress={handleLoginPress}>
           <Text style={styles.buttonText}>Login</Text>
         </TouchableOpacity>
       ) : (
@@ -171,4 +195,3 @@ const styles = StyleSheet.create({
     color: "#555",
   },
 });
-
