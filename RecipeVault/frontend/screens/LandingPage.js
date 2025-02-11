@@ -1,9 +1,10 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import Sidebar from "../components/Sidebar"; // Sidebar
-import SearchBar from "../components/SearchBar"; // SearchBar
-import FeaturedCarousel from "../components/FeaturedCarousel"; // Fixed Import
+import SearchBar from "../components/SearchBar"; // Search Bar
+import FeaturedCarousel from "../components/FeaturedCarousel"; // Featured Recipes
 import { useTheme } from "../context/ThemeContext"; // Theme Context
+import BookmarkedRecipesButton from "../components/BookmarkedRecipesButton"; // New Button Component
 
 const LandingPage = ({ navigation }) => {
   const { isDarkMode } = useTheme(); // Get theme state
@@ -15,7 +16,7 @@ const LandingPage = ({ navigation }) => {
   return (
     <View style={[styles.container, { backgroundColor: isDarkMode ? "#1c1c1c" : "#f8f9fa" }]}>
       <Sidebar navigation={navigation} />
-      
+
       <View style={styles.content}>
         {/* Search Bar */}
         <SearchBar onSearch={handleSearch} />
@@ -25,6 +26,9 @@ const LandingPage = ({ navigation }) => {
           Featured Recipes
         </Text>
         <FeaturedCarousel />
+
+        {/* 📌 View Bookmarked Recipes Button */}
+        <BookmarkedRecipesButton />
 
         {/* Welcome Message */}
         <Text style={[styles.welcomeText, { color: isDarkMode ? "#fff" : "#333" }]}>
