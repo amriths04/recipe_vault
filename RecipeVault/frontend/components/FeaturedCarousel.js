@@ -4,8 +4,8 @@ import Carousel from "react-native-reanimated-carousel";
 
 const { width } = Dimensions.get("window");
 
-const CARD_WIDTH = width*0.74; // Full width for full visibility
-const CARD_HEIGHT = 220; // Keeps images clear and visible
+const CARD_WIDTH = width*0.73; // Full width for full visibility
+const CARD_HEIGHT = 200; // Keeps images clear and visible
 
 const dummyData = [
   { id: "1", title: "Delicious Pasta 🍝", image: "https://imgs.search.brave.com/Oh3NnTmWsvFKSYoS1kNmViSDANxirxNevvvAMoWHmDM/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9pbWcu/ZnJlZXBpay5jb20v/cHJlbWl1bS1waG90/by90cmFkaXRpb25h/bC1pdGFsaWFuLXBl/bm5lLXBhc3RhLXdp/dGgtYm9sb2duZXNl/LXNhdWNlLWZyZXNo/LWJhc2lsLWJsYWNr/LWJhY2tncm91bmQt/c2lkZS12aWV3LWNs/b3NlLXVwXzE2NjEx/Ni00MzQ1LmpwZz9z/ZW10PWFpc19oeWJy/aWQ" },

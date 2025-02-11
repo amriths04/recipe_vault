@@ -1,10 +1,12 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, ScrollView } from "react-native";
 import Sidebar from "../components/Sidebar"; // Sidebar
 import SearchBar from "../components/SearchBar"; // Search Bar
 import FeaturedCarousel from "../components/FeaturedCarousel"; // Featured Recipes
 import { useTheme } from "../context/ThemeContext"; // Theme Context
-import BookmarkedRecipesButton from "../components/BookmarkedRecipesButton"; // New Button Component
+import BookmarkedRecipesButton from "../components/BookmarkedRecipesButton"; // 📌 Button
+import ShoppingListButton from "../components/ShoppingListButton"; // 🛒 Button
+import OngoingOrdersButton from "../components/OngoingOrdersButton"; // 🚚 Button
 
 const LandingPage = ({ navigation }) => {
   const { isDarkMode } = useTheme(); // Get theme state
@@ -17,7 +19,8 @@ const LandingPage = ({ navigation }) => {
     <View style={[styles.container, { backgroundColor: isDarkMode ? "#1c1c1c" : "#f8f9fa" }]}>
       <Sidebar navigation={navigation} />
 
-      <View style={styles.content}>
+      {/* Wrap content in ScrollView to enable scrolling */}
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
         {/* Search Bar */}
         <SearchBar onSearch={handleSearch} />
 
@@ -27,14 +30,22 @@ const LandingPage = ({ navigation }) => {
         </Text>
         <FeaturedCarousel />
 
-        {/* 📌 View Bookmarked Recipes Button */}
+        {/* 🛒 🚚 Buttons in Row */}
+        <View style={styles.row}>
+  <ShoppingListButton style={styles.halfButton} />
+  <OngoingOrdersButton style={styles.halfButton} />
+</View>
+
+
+        {/* Multiple BookmarkedRecipesButtons for testing scrolling */}
         <BookmarkedRecipesButton />
+
 
         {/* Welcome Message */}
         <Text style={[styles.welcomeText, { color: isDarkMode ? "#fff" : "#333" }]}>
           Welcome to Recipe Vault! 🚀
         </Text>
-      </View>
+      </ScrollView>
     </View>
   );
 };
@@ -46,10 +57,20 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: "row",
   },
-  content: {
-    flex: 1,
+  scrollContainer: {
+    flexGrow: 1, // Allows scrolling when content overflows
     padding: 20,
   },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 10,
+    paddingHorizontal: 0, // Ensures equal spacing from left & right
+  },
+  halfButton: {
+    flex: 1, // Each button takes half width
+    marginHorizontal: 5, // Equal spacing between buttons
+  },  
   sectionTitle: {
     fontSize: 18,
     fontWeight: "bold",

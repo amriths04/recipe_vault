@@ -24,8 +24,8 @@ const BookmarkedRecipesButton = () => {
 const styles = StyleSheet.create({
   button: {
     flexDirection: "row",
-    width: "100%",
-    padding: 15,
+    width: "104%",
+    padding: 5,
     borderRadius: 10,
     marginVertical: 10,
     overflow: "hidden",

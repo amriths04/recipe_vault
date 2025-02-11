@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { View, TextInput, TouchableOpacity } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons"; // Make sure you have this installed
 
-const SearchBar = ({ placeholder = "Search recipe/ingredients", onSearch }) => {
+const SearchBar = ({ placeholder = "Search recipes / ingredients", onSearch }) => {
   const [query, setQuery] = useState("");
 
   const handleSearch = () => {
@@ -34,9 +34,9 @@ const styles = {
     alignItems: "center",
     backgroundColor: "#f0f0f0",
     borderRadius: 10,
-    paddingHorizontal: 10,
+    paddingHorizontal: 0,
     height: 45,
-    marginHorizontal: 20,
+    marginHorizontal: 5,
     marginTop: 20,
   },
   input: {
