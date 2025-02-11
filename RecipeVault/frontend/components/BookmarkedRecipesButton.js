@@ -8,7 +8,7 @@ const BookmarkedRecipesButton = () => {
   return (
     <TouchableOpacity
       style={styles.button}
-      onPress={() => navigation.navigate("BookmarkedRecipesScreen")}
+      onPress={() => navigation.navigate("Bookmarks")}
     >
       {/* Semi-transparent background */}
       <View style={styles.fallback}>

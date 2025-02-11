@@ -8,7 +8,7 @@ const OngoingOrdersButton = () => {
   return (
     <TouchableOpacity
       style={styles.button}
-      onPress={() => navigation.navigate("OngoingOrdersScreen")}
+      onPress={() => navigation.navigate("Orders")}
     >
       <View style={styles.fallback}>
         <Text style={styles.text}>🚚 Check Ongoing Orders</Text>

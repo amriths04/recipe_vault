@@ -8,7 +8,7 @@ const ShoppingListButton = () => {
   return (
     <TouchableOpacity
       style={styles.button}
-      onPress={() => navigation.navigate("ShoppingListScreen")}
+      onPress={() => navigation.navigate("ShoppingList")}
     >
       <View style={styles.fallback}>
         <Text style={styles.text}>🛒 Go to Shopping List</Text>
