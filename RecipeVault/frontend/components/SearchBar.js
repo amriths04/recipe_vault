@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { View, TextInput, TouchableOpacity } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons"; // Make sure you have this installed
 
-const SearchBar = ({ placeholder = "Search recipes / ingredients", onSearch }) => {
+const SearchBar = ({ placeholder = "Search recipes or ingredients...", onSearch }) => {
   const [query, setQuery] = useState("");
 
   const handleSearch = () => {

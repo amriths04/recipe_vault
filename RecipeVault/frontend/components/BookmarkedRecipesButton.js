@@ -24,8 +24,8 @@ const BookmarkedRecipesButton = () => {
 const styles = StyleSheet.create({
   button: {
     flexDirection: "row",
-    width: "104%",
-    padding: 5,
+    width: "100%",
+    padding: 0,
     borderRadius: 10,
     marginVertical: 10,
     overflow: "hidden",
@@ -35,6 +35,8 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255, 255, 255, 0.1)", // Semi-transparent instead of Blur
     borderRadius: 10,
     borderWidth: 2, 
+borderColor: "rgba(255, 255, 255, 0.5)", // White with slight transparency
+
     borderColor:"black",
     padding: 15,
     flexDirection: "row",

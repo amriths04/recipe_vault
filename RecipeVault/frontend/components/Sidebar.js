@@ -1,152 +1,106 @@
-import React, { useState, useContext } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, TouchableWithoutFeedback } from "react-native";
+import React, { useState, useContext, useRef } from "react";
+import { View, TouchableOpacity, StyleSheet, TouchableWithoutFeedback } from "react-native";
 import { AuthContext } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons"; // Icons
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
-const Sidebar = ({ navigation }) => {
-  const { user, logout } = useContext(AuthContext);
-  const { isDarkMode, toggleTheme } = useTheme(); // Use theme context
-  const [expanded, setExpanded] = useState(false);
+const FloatingMenu = ({ navigation }) => {
+  const { logout } = useContext(AuthContext);
+  const { isDarkMode, toggleTheme } = useTheme();
+  const [isVisible, setIsVisible] = useState(false);
+  const timeoutRef = useRef(null); // Store timeout reference
 
-  const toggleSidebar = () => setExpanded(!expanded);
-  const handleOutsideClick = () => {
-    if (expanded) setExpanded(false);
+  const togglePanel = () => {
+    setIsVisible(true); // Show panel
+
+    // Set timeout to auto-close in 3 sec
+    timeoutRef.current = setTimeout(() => {
+      setIsVisible(false);
+    }, 3000);
+  };
+
+  const closePanel = () => {
+    clearTimeout(timeoutRef.current); // Clear auto-close timeout if closed manually
+    setIsVisible(false);
   };
 
   return (
-    <TouchableWithoutFeedback onPress={handleOutsideClick}>
-      <View
-        style={[
-          styles.sidebar,
-          expanded ? styles.sidebarExpanded : styles.sidebarCollapsed,
-          { backgroundColor: isDarkMode ? "#1c1c1c" : "#2c3e50" }, // Apply theme
-        ]}
-      >
-        <View style={styles.bottomContainer}>
-          {/* User Profile Icon */}
-          <Ionicons name="person-circle-outline" size={50} color="white" style={styles.profileIcon} />
+    <TouchableWithoutFeedback onPress={closePanel}>
+      <View style={styles.container}>
+        {/* Floating Button (Three Dots or X) */}
+        <TouchableOpacity style={styles.floatingButton} onPress={togglePanel}>
+          <Ionicons name={isVisible ? "close" : "ellipsis-horizontal"} size={22} color="white" />
+        </TouchableOpacity>
 
-          {/* Username */}
-          {expanded && <Text style={styles.username}>{user?.username || "Guest"}</Text>}
-
-          {/* Home Button */}
-          {expanded && (
-            <TouchableOpacity style={styles.navButton} onPress={() => navigation.navigate("Home")}>
-              <Text style={styles.navText}>🏠</Text>
-            </TouchableOpacity>
-          )}
-
-          {/* View Bookmarked Recipes */}
-          {expanded && (
-            <TouchableOpacity style={styles.navButton} onPress={() => navigation.navigate("Bookmarks")}>
-              <MaterialCommunityIcons name="bookmark-outline" size={20} color="white" />
-              <Text style={styles.navText}></Text>
-            </TouchableOpacity>
-          )}
-
-          {/* Shopping List */}
-          {expanded && (
-            <TouchableOpacity style={styles.navButton} onPress={() => navigation.navigate("ShoppingList")}>
-              <MaterialCommunityIcons name="cart-outline" size={20} color="white" />
-              <Text style={styles.navText}></Text>
-            </TouchableOpacity>
-          )}
-
-          {/* Ongoing Orders */}
-          {expanded && (
-            <TouchableOpacity style={styles.navButton} onPress={() => navigation.navigate("Orders")}>
-              <MaterialCommunityIcons name="truck-outline" size={20} color="white" />
-              <Text style={styles.navText}></Text>
-            </TouchableOpacity>
-          )}
-
-          {/* Dark Mode Toggle */}
-          {expanded && (
-            <TouchableOpacity style={styles.themeButton} onPress={toggleTheme}>
-              <Text style={styles.navText}>{isDarkMode ? "🌞" : "🌙"}</Text>
-            </TouchableOpacity>
-          )}
-
-<TouchableOpacity style={styles.logoutButton} onPress={logout}>
-  <MaterialCommunityIcons name="logout" size={24} color="white" />
-</TouchableOpacity>
-
-
-          {/* Sidebar Toggle Button */}
-          <TouchableOpacity style={styles.menuButton} onPress={toggleSidebar}>
-            <Ionicons name={expanded ? "close" : "menu"} size={28} color="white" />
-          </TouchableOpacity>
-        </View>
+        {/* Bottom Panel - Two Row Grid */}
+        {isVisible && (
+          <View style={[styles.panel, { backgroundColor: isDarkMode ? "#222" : "#2c3e50" }]}>
+            <View style={styles.row}>
+              <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate("Home")}>
+                <Ionicons name="home-outline" size={26} color="white" />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate("Bookmarks")}>
+                <MaterialCommunityIcons name="bookmark-outline" size={26} color="white" />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate("ShoppingList")}>
+                <MaterialCommunityIcons name="cart-outline" size={26} color="white" />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.row}>
+              <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate("Orders")}>
+                <MaterialCommunityIcons name="truck-outline" size={26} color="white" />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.iconButton} onPress={toggleTheme}>
+                <Ionicons name={isDarkMode ? "sunny-outline" : "moon-outline"} size={26} color="white" />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.iconButton} onPress={logout}>
+                <MaterialCommunityIcons name="logout" size={26} color="white" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
       </View>
     </TouchableWithoutFeedback>
   );
 };
 
-export default Sidebar;
+export default FloatingMenu;
 
 const styles = StyleSheet.create({
-  sidebar: {
-    padding: 10,
+  container: {
+    position: "absolute",
+    bottom: 15,
+    left: 15,
+    zIndex: 20,
   },
-  sidebarCollapsed: {
-    width: 66,
-  },
-  sidebarExpanded: {
-    width: 100,
-  },
-  bottomContainer: {
-    alignItems: "center",
-    justifyContent: "flex-end",
-    flex: 1,
-    paddingBottom: 20,
-  },
-  profileIcon: {
-    marginBottom: 10,
-  },
-  username: {
-    fontSize: 16,
-    color: "#fff",
-    fontWeight: "bold",
-    marginBottom: 15,
-  },
-  navButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+  floatingButton: {
+    width: 40,
+    height: 40,
     backgroundColor: "#3498db",
-    borderRadius: 5,
-    marginBottom: 10,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 5,
   },
-  navText: {
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: "bold",
+  panel: {
+    position: "absolute",
+    bottom: 50,
+    left: -10,
+    padding: 8,
+    borderRadius: 10,
   },
-  logoutButton: {
-    width: 40,  
-    height: 40,  
-    backgroundColor: "#e74c3c",  
-    borderRadius: 5,  
-    alignItems: "center",  
-    justifyContent: "center",  
-    marginBottom: 10,  
-    display: "flex",  
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 6,
   },
-  
-  
-  themeButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+  iconButton: {
+    width: 40,
+    height: 40,
     backgroundColor: "#34495e",
-    borderRadius: 5,
-    marginBottom: 10,
-  },
-  menuButton: {
-    padding: 10,
-    backgroundColor: "#34495e",
-    borderRadius: 5,
+    borderRadius: 8,
+    justifyContent: "center",
+    alignItems: "center",
+    marginHorizontal: 4,
   },
 });

@@ -17,31 +17,19 @@ const LandingPage = ({ navigation }) => {
 
   return (
     <View style={[styles.container, { backgroundColor: isDarkMode ? "#1c1c1c" : "#f8f9fa" }]}>
+      {/* Sidebar - Now floating above everything */}
       <Sidebar navigation={navigation} />
 
-      {/* Wrap content in ScrollView to enable scrolling */}
+      {/* Main Content */}
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {/* Search Bar */}
         <SearchBar onSearch={handleSearch} />
-
-        {/* Featured Recipes Section */}
-        <Text style={[styles.sectionTitle, { color: isDarkMode ? "#fff" : "#333" }]}>
-          Featured Recipes
-        </Text>
+        <Text style={[styles.sectionTitle, { color: isDarkMode ? "#fff" : "#333" }]}>Featured Recipes</Text>
         <FeaturedCarousel />
-
-        {/* 🛒 🚚 Buttons in Row */}
         <View style={styles.row}>
-  <ShoppingListButton style={styles.halfButton} />
-  <OngoingOrdersButton style={styles.halfButton} />
-</View>
-
-
-        {/* Multiple BookmarkedRecipesButtons for testing scrolling */}
+          <ShoppingListButton style={styles.halfButton} />
+          <OngoingOrdersButton style={styles.halfButton} />
+        </View>
         <BookmarkedRecipesButton />
-
-
-        {/* Welcome Message */}
         <Text style={[styles.welcomeText, { color: isDarkMode ? "#fff" : "#333" }]}>
           Welcome to Recipe Vault! 🚀
         </Text>
@@ -50,7 +38,7 @@ const LandingPage = ({ navigation }) => {
   );
 };
 
-export default LandingPage;
+export default LandingPage; // ✅ Fixed export
 
 const styles = StyleSheet.create({
   container: {

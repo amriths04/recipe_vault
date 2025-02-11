@@ -19,9 +19,9 @@ const ShoppingListButton = () => {
 
 const styles = StyleSheet.create({
   button: {
-    width: "42%", // Half width to fit beside another button
+    width: "48%", // Half width to fit beside another button
     marginVertical: 5,
-    marginHorizontal: "5%", // Same left & right margin
+    marginHorizontal: "1%", // Same left & right margin
   },
   fallback: {
     backgroundColor: "rgba(255, 255, 255, 0.1)", // Semi-transparent

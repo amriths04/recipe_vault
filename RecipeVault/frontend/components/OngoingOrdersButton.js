@@ -19,9 +19,8 @@ const OngoingOrdersButton = () => {
 
 const styles = StyleSheet.create({
   button: {
-    width: "42%", // Half width to fit beside another button
+    width: "48%", // Half width to fit beside Shopping List button
     marginVertical: 5,
-    marginHorizontal: "2%", // Same left & right margin
   },
   fallback: {
     backgroundColor: "rgba(255, 255, 255, 0.1)", // Semi-transparent
