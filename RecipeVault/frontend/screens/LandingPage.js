@@ -7,6 +7,7 @@ import { useTheme } from "../context/ThemeContext"; // Theme Context
 import BookmarkedRecipesButton from "../components/BookmarkedRecipesButton"; // 📌 Button
 import ShoppingListButton from "../components/ShoppingListButton"; // 🛒 Button
 import OngoingOrdersButton from "../components/OngoingOrdersButton"; // 🚚 Button
+import Header from "../components/Header";
 
 const LandingPage = ({ navigation }) => {
   const { isDarkMode } = useTheme(); // Get theme state
@@ -19,10 +20,12 @@ const LandingPage = ({ navigation }) => {
     <View style={[styles.container, { backgroundColor: isDarkMode ? "#1c1c1c" : "#f8f9fa" }]}>
       {/* Sidebar - Now floating above everything */}
       <Sidebar navigation={navigation} />
-
       {/* Main Content */}
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <SearchBar onSearch={handleSearch} />
+        <View style={{ padding: 1 }}>
+          <Header />
+        </View>
+        {/* <SearchBar onSearch={handleSearch} /> */}
         <Text style={[styles.sectionTitle, { color: isDarkMode ? "#fff" : "#333" }]}>Featured Recipes</Text>
         <FeaturedCarousel />
         <View style={styles.row}>
@@ -58,7 +61,7 @@ const styles = StyleSheet.create({
   halfButton: {
     flex: 1, // Each button takes half width
     marginHorizontal: 5, // Equal spacing between buttons
-  },  
+  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: "bold",
