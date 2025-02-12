@@ -57,6 +57,12 @@ const FloatingMenu = ({ navigation }) => {
                 <MaterialCommunityIcons name="logout" size={26} color="white" />
               </TouchableOpacity>
             </View>
+            {/* Explore Recipes Button */}
+            <View style={styles.row}>
+              <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate("ExploreRecipes")}>
+                <MaterialCommunityIcons name="silverware-fork-knife" size={26} color="white" />
+              </TouchableOpacity>
+            </View>
           </View>
         )}
       </View>

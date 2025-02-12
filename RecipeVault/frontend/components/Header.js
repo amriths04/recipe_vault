@@ -24,12 +24,12 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start", // Keeps elements together
     paddingHorizontal: 15,
     paddingVertical: 10,
-    marginTop: 10,
+    marginTop: 0,
     width: width,
   },
   searchBar: {
     flex: 1, // Makes search bar take most of the space
-    maxWidth: width * 0.75, // Prevents stretching on large screens
+    maxWidth: width, // Prevents stretching on large screens
   },
   userIcon: {
     marginLeft: 15, // Adds spacing between SearchBar & UserIcon
