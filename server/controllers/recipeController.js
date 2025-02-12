@@ -3,22 +3,32 @@ import Bookmark from "../models/bookmarkModel.js";
 
 // 📌 Create a Recipe
 export const createRecipe = async (req, res) => {
-  try {
-    const { name, description, ingredients, procedure, characteristics } = req.body;
-    const newRecipe = new Recipe({
-      name,
-      description,
-      ingredients,
-      procedure,
-      characteristics,
-      createdBy: req.user.id, // Assuming user ID is extracted from auth middleware
-    });
-    const savedRecipe = await newRecipe.save();
-    res.status(201).json(savedRecipe);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to create recipe" });
-  }
-};
+    try {
+      const { name, description, image, ingredients, procedure, characteristics, createdBy } = req.body;
+  
+      // Check required fields
+      if (!name || !ingredients || !procedure || !characteristics || !createdBy) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+  
+      const newRecipe = new Recipe({
+        name,
+        description,
+        image: image || "https://via.placeholder.com/300", // Default placeholder
+        ingredients,
+        procedure,
+        characteristics,
+        createdBy
+      });
+  
+      const savedRecipe = await newRecipe.save();
+      res.status(201).json(savedRecipe);
+    } catch (error) {
+      console.error("Error creating recipe:", error);
+      res.status(500).json({ error: error.message || "Server error" });
+    }
+  };
+  
 
 // 📌 Get All Recipes
 export const getAllRecipes = async (req, res) => {
@@ -38,17 +48,6 @@ export const getRecipeById = async (req, res) => {
     res.status(200).json(recipe);
   } catch (error) {
     res.status(500).json({ error: "Error fetching recipe" });
-  }
-};
-
-// 📌 Get Recipes Created by a Specific User
-export const getRecipesByUser = async (req, res) => {
-  try {
-    const userId = req.user.id; // Assuming authentication middleware
-    const recipes = await Recipe.find({ createdBy: userId });
-    res.status(200).json(recipes);
-  } catch (error) {
-    res.status(500).json({ error: "Error fetching user recipes" });
   }
 };
 
@@ -78,7 +77,7 @@ export const deleteRecipe = async (req, res) => {
 export const toggleBookmarkRecipe = async (req, res) => {
   try {
     const { recipeId } = req.body;
-    const userId = req.user.id;
+    const userId = req.user?.id || "65c4ef...dummyid";
 
     const existingBookmark = await Bookmark.findOne({ user: userId, recipe: recipeId });
 
