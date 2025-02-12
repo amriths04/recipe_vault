@@ -1,4 +1,44 @@
-const API_URL = "http://192.168.0.166:5000/api/auth";
+const API_URL = "http://192.168.152.145:5000/api/auth";
+
+export const registerUser = async (username, email, phone, password, name, dob) => {
+  try {
+    const response = await fetch(`${API_URL}/register`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        username,
+        email,
+        phone,
+        password,
+        profile: { name, dob },
+      }),
+    });
+
+    const contentType = response.headers.get("content-type");
+
+    if (!contentType || !contentType.includes("application/json")) {
+      const textResponse = await response.text();
+      console.error("🔴 Non-JSON Response:", textResponse);
+      return { error: "Unexpected server response" };
+    }
+
+    const jsonResponse = await response.json();
+
+    if (!jsonResponse.success) {
+      return { error: jsonResponse.message || "Registration failed" };
+    }
+
+    return jsonResponse.data; // Return only relevant data
+  } catch (error) {
+    console.error("🔴 Register error:", error);
+    return { error: "Something went wrong!" };
+  }
+};
+
+
+
 
 export const loginUser = async (email, password) => {
   try {

@@ -8,26 +8,25 @@ import { generateAccessAndRefreshTokens } from "../utils/jwtToken.js";
 const registerUser = asyncHandler(async (req, res) => {
     const { username, email, phone, password, profile } = req.body;
 
-    if ([username, email, password].some((field) => !field?.trim())) {
-        throw new ApiError(400, "Username, email, and password are required");
+    if ([username, email, password, profile.name, profile.dob].some((field) => !field?.trim())) {
+        throw new ApiError(400, "All fields are required: username, email, password, name, dob,.");
     }
 
     // Check if user already exists
-    const existedUser = await User.findOne({ $or: [{ username }, { email }, { phone }] });
-    if (existedUser) {
-        throw new ApiError(409, "User with email, username, or phone already exists");
+    const existingUser = await User.findOne({ $or: [{ username }, { email }, { phone }] });
+    if (existingUser) {
+        throw new ApiError(409, "User with this email, username, or phone already exists.");
     }
 
-    // Create user
+    // Create new user
     const user = await User.create({
         username: username.toLowerCase(),
         email,
         phone,
         password,
         profile: {
-            name: profile?.name || "",
-            dob: profile?.dob || null,
-            location: profile?.location || "",
+            name: profile.name,
+            dob: profile.dob, // ✅ Ensure location is stored
         },
     });
 
@@ -36,7 +35,7 @@ const registerUser = asyncHandler(async (req, res) => {
     user.refreshToken = refreshToken;
     await user.save();
 
-    // Return user without sensitive data
+    // Remove sensitive data before sending response
     const createdUser = await User.findById(user._id).select("-password -refreshToken");
 
     // Set cookies (httpOnly & secure)
@@ -48,6 +47,7 @@ const registerUser = asyncHandler(async (req, res) => {
         .cookie("refreshToken", refreshToken, options)
         .json(new ApiResponse(201, { user: createdUser, accessToken }, "User registered successfully"));
 });
+
 
 
 // 🔹 LOGIN USER

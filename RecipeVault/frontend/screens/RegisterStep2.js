@@ -1,22 +1,44 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { registerUser } from "../services/authService";
 
 export default function RegisterStep2({ route, navigation }) {
-  const { formData } = route.params; // Get previous step data
+  const { formData } = route.params; // Step 1 data
 
   const [profileData, setProfileData] = useState({
     name: "",
-    dob: "",
-    location: "",
+    dob: ""// Added location field
   });
 
-  // Handle Final Submission (Later Replace with API Call)
-  const handleSubmit = () => {
+  // Handle Final Submission (Call API)
+  const handleSubmit = async () => {
     const finalData = { ...formData, ...profileData };
-    console.log("Final User Data:", finalData);
 
-    // Navigate back to login
-    navigation.navigate("Login");
+    if (!finalData.name || !finalData.dob) {
+      Alert.alert("Error", "Please fill in all fields.");
+      return;
+    }
+
+    try {
+      const response = await registerUser(
+        finalData.username,
+        finalData.email,
+        finalData.phone,
+        finalData.password,
+        finalData.name,
+        finalData.dob
+      );
+
+      if (response?.accessToken) {
+        Alert.alert("Success", "Registration successful!");
+        navigation.navigate("Login");
+      } else {
+        Alert.alert("Registration Failed", response.error || "Something went wrong.");
+      }
+    } catch (error) {
+      console.error("Register error:", error);
+      Alert.alert("Error", "Something went wrong. Please try again.");
+    }
   };
 
   return (
@@ -37,13 +59,7 @@ export default function RegisterStep2({ route, navigation }) {
         value={profileData.dob}
         onChangeText={(text) => setProfileData({ ...profileData, dob: text })}
       />
-      <TextInput
-        style={styles.input}
-        placeholder="Location"
-        placeholderTextColor="#666"
-        value={profileData.location}
-        onChangeText={(text) => setProfileData({ ...profileData, location: text })}
-      />
+      
 
       {/* Buttons */}
       <View style={styles.buttonContainer}>

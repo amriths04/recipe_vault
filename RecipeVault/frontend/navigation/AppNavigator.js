@@ -6,6 +6,7 @@ import RegisterStep2 from "../screens/RegisterStep2";
 import ShoppingListScreen from "../screens/ShoppingListScreen";
 import OngoingOrdersScreen from "../screens/OngoingOrdersScreen";
 import BookmarkedRecipesScreen from "../screens/BookmarkedRecipesScreen";
+import ProfileScreen from "../screens/ProfileScreen";
 
 const Stack = createStackNavigator();
 
@@ -19,6 +20,7 @@ export default function AppNavigator() {
       <Stack.Screen name="ShoppingList" component={ShoppingListScreen} />
       <Stack.Screen name="Orders" component={OngoingOrdersScreen} />
       <Stack.Screen name="Bookmarks" component={BookmarkedRecipesScreen} />
+      <Stack.Screen name="Profile" component={ProfileScreen} />
     </Stack.Navigator>
   );
 }
