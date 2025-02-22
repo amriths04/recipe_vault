@@ -1,4 +1,4 @@
-const API_URL = "http://192.168.0.170:5000/api/auth";
+const API_URL = "http://192.168.232.126:5000/api/auth";
 
 export const registerUser = async (username, email, phone, password, name, dob) => {
   try {

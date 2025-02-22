@@ -1,20 +1,24 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { 
+  View, Text, TextInput, TouchableOpacity, 
+  StyleSheet, Alert, StatusBar 
+} from "react-native";
 import { registerUser } from "../services/authService";
+import { useTheme } from "../context/ThemeContext"; // Dark Mode Support
 
-export default function RegisterStep2({ route, navigation }) {
+const RegisterStep2 = ({ route, navigation }) => {  // ⬅️ Removed extra export default
   const { formData } = route.params; // Step 1 data
+  const { isDarkMode } = useTheme(); // Get theme state
 
   const [profileData, setProfileData] = useState({
     name: "",
-    dob: ""// Added location field
+    dob: "",
   });
 
-  // Handle Final Submission (Call API)
   const handleSubmit = async () => {
     const finalData = { ...formData, ...profileData };
 
-    if (!finalData.name || !finalData.dob) {
+    if (!finalData.name.trim() || !finalData.dob.trim()) {
       Alert.alert("Error", "Please fill in all fields.");
       return;
     }
@@ -42,65 +46,66 @@ export default function RegisterStep2({ route, navigation }) {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Complete Your Profile</Text>
+    <View style={[styles.container, isDarkMode && styles.darkContainer]}>
+      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={isDarkMode ? "#1c1c1c" : "#fff"} />
+      <Text style={[styles.title, isDarkMode && styles.darkText]}>✨ Complete Your Profile</Text>
 
       <TextInput
-        style={styles.input}
+        style={[styles.input, isDarkMode && styles.darkInput]}
         placeholder="Full Name"
-        placeholderTextColor="#666"
+        placeholderTextColor={isDarkMode ? "#bbb" : "#666"}
         value={profileData.name}
         onChangeText={(text) => setProfileData({ ...profileData, name: text })}
       />
+
       <TextInput
-        style={styles.input}
+        style={[styles.input, isDarkMode && styles.darkInput]}
         placeholder="Date of Birth (YYYY-MM-DD)"
-        placeholderTextColor="#666"
+        placeholderTextColor={isDarkMode ? "#bbb" : "#666"}
         value={profileData.dob}
         onChangeText={(text) => setProfileData({ ...profileData, dob: text })}
       />
-      
 
-      {/* Buttons */}
       <View style={styles.buttonContainer}>
         <TouchableOpacity style={[styles.button, styles.backButton]} onPress={() => navigation.goBack()}>
-          <Text style={styles.buttonText}>Back</Text>
+          <Text style={styles.buttonText}>⬅️ Back</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-          <Text style={styles.buttonText}>Submit</Text>
+          <Text style={styles.buttonText}>✅ Submit</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
-}
+};
+
+// ✅ Only ONE export default at the end
+export default RegisterStep2;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#f5f5f5",
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
-  },
+  container: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#f5f5f5", padding: 20 },
+  darkContainer: { backgroundColor: "#1c1c1c" },
+
+  title: { fontSize: 24, fontWeight: "bold", marginBottom: 20, textAlign: "center", color: "#333" },
+  darkText: { color: "#fff" },
+
   input: {
-    width: 300,
+    width: "100%",
     height: 50,
     backgroundColor: "#fff",
     borderRadius: 8,
     paddingHorizontal: 15,
-    marginBottom: 10,
+    marginBottom: 12,
     borderWidth: 1,
     borderColor: "#ccc",
   },
-  buttonContainer: {
-    flexDirection: "row",
-    marginTop: 10,
+  darkInput: {
+    backgroundColor: "#333",
+    borderColor: "#555",
+    color: "#fff",
   },
+
+  buttonContainer: { flexDirection: "row", marginTop: 10 },
   button: {
     width: 140,
     height: 50,
@@ -110,12 +115,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginHorizontal: 5,
   },
-  backButton: {
-    backgroundColor: "#6c757d",
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "bold",
-  },
+  backButton: { backgroundColor: "#6c757d" },
+
+  buttonText: { color: "#fff", fontSize: 18, fontWeight: "bold" },
 });

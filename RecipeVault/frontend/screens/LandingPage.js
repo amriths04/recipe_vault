@@ -13,21 +13,24 @@ const LandingPage = ({ navigation }) => {
   const { isDarkMode } = useTheme(); // Get theme state
 
   return (
-    <View style={[styles.container, { backgroundColor: isDarkMode ? "#1c1c1c" : "#fff" }]}>
-      {/* ✅ Fix Status Bar */}
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+    <View style={[styles.container, isDarkMode && styles.darkContainer]}>
+      {/* ✅ Dynamic Status Bar for Light/Dark Mode */}
+      <StatusBar
+        barStyle={isDarkMode ? "light-content" : "dark-content"}
+        backgroundColor={isDarkMode ? "#1c1c1c" : "#fff"}
+      />
 
-      {/* ✅ Keep Header Fixed at Top */}
+      {/* ✅ Fixed Header at the Top */}
       <Header />
 
-      {/* Sidebar (Floating Above Everything) */}
+      {/* Sidebar (Floating) */}
       <Sidebar navigation={navigation} />
 
       {/* Main Content */}
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         {/* <SearchBar onSearch={handleSearch} /> */}
 
-        <Text style={[styles.sectionTitle, { color: isDarkMode ? "#fff" : "#333" }]}>
+        <Text style={[styles.sectionTitle, isDarkMode && styles.darkText]}>
           Featured Recipes
         </Text>
         <FeaturedCarousel />
@@ -40,7 +43,7 @@ const LandingPage = ({ navigation }) => {
 
         <BookmarkedRecipesButton />
 
-        <Text style={[styles.welcomeText, { color: isDarkMode ? "#fff" : "#333" }]}>
+        <Text style={[styles.welcomeText, isDarkMode && styles.darkText]}>
           Welcome to Recipe Vault! 🚀
         </Text>
       </ScrollView>
@@ -53,7 +56,10 @@ export default LandingPage;
 const styles = StyleSheet.create({
   container: {
     flex: 1, // ✅ Ensures full screen
-    backgroundColor: "#fff", // ✅ White background for light mode
+    backgroundColor: "#fff", // ✅ Default Light Mode
+  },
+  darkContainer: {
+    backgroundColor: "#1c1c1c", // ✅ Dark Mode Background
   },
   scrollContainer: {
     flexGrow: 1, // ✅ Allows scrolling
@@ -76,6 +82,10 @@ const styles = StyleSheet.create({
     marginTop: 5, // ✅ Reduced top margin
     marginBottom: 5,
     alignSelf: "center",
+    color: "#333", // ✅ Default Text Color
+  },
+  darkText: {
+    color: "#fff", // ✅ White Text for Dark Mode
   },
   welcomeText: {
     fontSize: 22,

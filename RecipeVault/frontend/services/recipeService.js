@@ -1,4 +1,4 @@
-const API_URL = "http://192.168.0.170:5000/api/recipes";
+const API_URL = "http://192.168.232.126:5000/api/recipes";
 
 export const fetchRecipes = async () => {
   try {
