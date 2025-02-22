@@ -23,7 +23,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "flex-start", // Keeps elements together
     paddingHorizontal: 15,
-    paddingVertical: 10,
+    paddingVertical: 40,
     marginTop: 0,
     width: width,
   },
