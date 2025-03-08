@@ -87,15 +87,25 @@ const loginUser = asyncHandler(async (req, res) => {
 
 // 🔹 LOGOUT USER
 const logoutUser = asyncHandler(async (req, res) => {
-    await User.findByIdAndUpdate(req.user._id, { $unset: { refreshToken: 1 } });
+    console.log("🛑 Logout Request from User:", req.user?._id);
 
-    const options = { httpOnly: true, secure: true, sameSite: "Strict" };
+    // Clear cookies
+    res.clearCookie("accessToken", { httpOnly: true, secure: true, sameSite: "Strict" });
+    res.clearCookie("refreshToken", { httpOnly: true, secure: true, sameSite: "Strict" });
 
-    return res
-        .status(200)
-        .clearCookie("accessToken", options)
-        .clearCookie("refreshToken", options)
-        .json(new ApiResponse(200, {}, "User logged out successfully"));
+    console.log("🍪 Cookies Cleared");
+
+    // Remove refresh token from DB
+    const user = await User.findByIdAndUpdate(req.user._id, { $unset: { refreshToken: 1 } }, { new: true });
+
+    if (!user) {
+        console.log("❌ User not found in DB");
+        return res.status(404).json({ error: "User not found" });
+    }
+
+    console.log("✅ Logout successful for:", user.username);
+
+    return res.status(200).json(new ApiResponse(200, {}, "User logged out successfully"));
 });
 
 export { registerUser, loginUser, logoutUser };

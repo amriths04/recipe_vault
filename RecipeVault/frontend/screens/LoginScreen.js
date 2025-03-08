@@ -77,7 +77,6 @@ export default function LoginScreen({ navigation }) {
   return (
     <View style={[styles.container, isDarkMode && styles.darkContainer]}>
       <Text style={[styles.title, isDarkMode && styles.darkText]}>{isLogin ? "Login" : "Register"}</Text>
-
       <TextInput
         style={[styles.input, isDarkMode && styles.darkInput]}
         placeholder="Email"

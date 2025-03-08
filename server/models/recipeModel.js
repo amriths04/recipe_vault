@@ -6,7 +6,7 @@ const RecipeSchema = new Schema(
   {
     name: { type: String, required: true },
     description: { type: String },
-    image: { type: String, default: "https://via.placeholder.com/300" }, // Placeholder image
+    image: { type: String, default: "https://via.placeholder.com/300" },
     ingredients: [
       {
         name: { type: String, required: true },
@@ -21,7 +21,7 @@ const RecipeSchema = new Schema(
       spiciness: { type: String },
     },
     createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    favoritedBy: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    favoritedBy: [{ type: Schema.Types.ObjectId, ref: "User" }], // ✅ Holds user IDs of people who bookmarked
   },
   { timestamps: true }
 );

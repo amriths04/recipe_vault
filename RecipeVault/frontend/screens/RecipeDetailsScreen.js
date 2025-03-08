@@ -1,19 +1,23 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { 
   View, Text, StyleSheet, ActivityIndicator, ScrollView, 
-  Image, StatusBar 
+  Image, StatusBar, TouchableOpacity 
 } from "react-native";
 import { useRoute } from "@react-navigation/native";
-import { fetchRecipeById } from "../services/recipeService";
+import { fetchRecipeById, toggleBookmarkRecipe } from "../services/recipeService";
 import { useTheme } from "../context/ThemeContext"; // Dark Mode Support
+import { AuthContext } from "../context/AuthContext"; // 🔹 Import AuthContext
 
 const RecipeDetailsScreen = () => {
   const route = useRoute();
   const { recipeId } = route.params;
   const { isDarkMode } = useTheme(); // Get theme state
+  const { user, token } = useContext(AuthContext); // ✅ Get 'token' separately
+
 
   const [recipe, setRecipe] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isBookmarked, setIsBookmarked] = useState(false); // 🔹 Bookmark state
 
   useEffect(() => {
     const getRecipeDetails = async () => {
@@ -21,6 +25,7 @@ const RecipeDetailsScreen = () => {
       const data = await fetchRecipeById(recipeId);
       if (!data.error) {
         setRecipe(data);
+        setIsBookmarked(data.favoritedBy?.includes(user?._id)); // ✅ Use user ID from context
       } else {
         console.error("Error fetching recipe details:", data.error);
       }
@@ -28,7 +33,28 @@ const RecipeDetailsScreen = () => {
     };
 
     getRecipeDetails();
-  }, [recipeId]);
+  }, [recipeId, user]);
+
+  const handleBookmarkToggle = async () => {
+    if (!user || !token) {  // ✅ Use 'token' from AuthContext
+      console.log("🔴 No user or token, cannot bookmark.");
+      return;
+    }
+  
+    console.log("✅ Bookmark Toggle Clicked!", { recipeId, userId: user._id });
+  
+    const response = await toggleBookmarkRecipe(recipeId, user._id, token);
+    console.log("🔍 API Response:", response);
+  
+    if (!response.error) {
+      console.log("✅ Bookmark success!");
+      setIsBookmarked(!isBookmarked);
+    } else {
+      console.error("🔴 Bookmarking error:", response.error);
+    }
+  };
+  
+  
 
   if (loading) {
     return (
@@ -68,6 +94,18 @@ const RecipeDetailsScreen = () => {
       <Text style={[styles.description, isDarkMode && styles.darkText]}>
         {recipe.description}
       </Text>
+
+      {/* 🔹 Bookmark Button */}
+      {user && ( // ✅ Show button only if user is logged in
+        <TouchableOpacity 
+          style={[styles.bookmarkButton, isBookmarked ? styles.unbookmarkButton : styles.bookmarkButton]} 
+          onPress={handleBookmarkToggle}
+        >
+          <Text style={styles.bookmarkButtonText}>
+            {isBookmarked ? "Unbookmark" : "Bookmark"}
+          </Text>
+        </TouchableOpacity>
+      )}
 
       {/* Ingredients Section */}
       <Text style={[styles.subHeading, isDarkMode && styles.darkSubHeading]}>🛒 Ingredients</Text>
@@ -114,6 +152,23 @@ const styles = StyleSheet.create({
   darkCard: { backgroundColor: "#2c3e50" },
 
   listItem: { fontSize: 16, marginBottom: 5, color: "#2c3e50" },
+
+  /* 🔹 Bookmark Button */
+  bookmarkButton: {
+    backgroundColor: "#3498db",
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    marginVertical: 10,
+  },
+  unbookmarkButton: {
+    backgroundColor: "#e74c3c", // Red for unbookmark
+  },
+  bookmarkButtonText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#fff",
+  },
 });
 
 export default RecipeDetailsScreen;

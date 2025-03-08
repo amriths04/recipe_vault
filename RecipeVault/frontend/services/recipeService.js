@@ -1,4 +1,4 @@
-const API_URL = "http://192.168.0.170:5000/api/recipes";
+const API_URL = "http://192.168.71.126:5000/api/recipes";
 
 export const fetchRecipes = async () => {
   try {
@@ -86,19 +86,49 @@ export const deleteRecipe = async (recipeId) => {
   }
 };
 
-export const toggleBookmarkRecipe = async (recipeId, userId) => {
+export const toggleBookmarkRecipe = async (recipeId, userId, token) => {
   try {
     const response = await fetch(`${API_URL}/bookmark`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`, // ✅ Include JWT token
       },
-      body: JSON.stringify({ recipeId, userId }),
+      body: JSON.stringify({ recipeId }),
     });
 
-    return await response.json();
+    const text = await response.text();
+    console.log("🔍 Raw API Response:", text); // Debugging
+
+    const data = JSON.parse(text);
+    return data;
   } catch (error) {
     console.error("🔴 Toggle Bookmark Error:", error);
     return { error: "Something went wrong!" };
+  }
+};
+
+
+
+export const fetchBookmarkedRecipes = async (token) => {
+  try {
+    const response = await fetch(`${API_URL}/bookmarked/meow`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`, // ✅ Get token from context
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Failed to fetch bookmarked recipes");
+    }
+
+    return data.bookmarkedRecipes;
+  } catch (error) {
+    console.error("🔴 Fetch Bookmarked Recipes Error:", error);
+    return [];
   }
 };

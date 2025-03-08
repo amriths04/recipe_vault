@@ -73,23 +73,63 @@ export const deleteRecipe = async (req, res) => {
   }
 };
 
-// 📌 Toggle Bookmark (Add/Remove Bookmark for Recipe)
 export const toggleBookmarkRecipe = async (req, res) => {
+  const { recipeId } = req.body;
+  const userId = req.user._id; // Ensure this comes from auth middleware
+
+  // Find the recipe by ID
+  const recipe = await Recipe.findById(recipeId);
+  if (!recipe) {
+      throw new ApiError(404, "Recipe not found");
+  }
+
+  // Check if the user has already bookmarked it
+  const isBookmarked = recipe.favoritedBy.includes(userId);
+
+  if (isBookmarked) {
+      // If bookmarked, remove the user from favoritedBy
+      recipe.favoritedBy = recipe.favoritedBy.filter(id => id.toString() !== userId.toString());
+  } else {
+      // If not bookmarked, add the user to favoritedBy
+      recipe.favoritedBy.push(userId);
+  }
+
+  await recipe.save(); // Save changes to DB
+
+  res.status(200).json({ 
+      message: "Recipe bookmark toggled", 
+      isBookmarked: !isBookmarked 
+  });
+};
+
+
+export const getBookmarkedRecipes = async (req, res) => {
   try {
-    const { recipeId } = req.body;
-    const userId = req.user?.id || "65c4ef...dummyid";
+    const userId = req.user?._id;
 
-    const existingBookmark = await Bookmark.findOne({ user: userId, recipe: recipeId });
+    console.log("🔍 Fetching bookmarked recipes for user:", userId);
 
-    if (existingBookmark) {
-      await Bookmark.findByIdAndDelete(existingBookmark._id);
-      return res.status(200).json({ message: "Bookmark removed" });
-    } else {
-      const newBookmark = new Bookmark({ user: userId, recipe: recipeId });
-      await newBookmark.save();
-      return res.status(201).json({ message: "Recipe bookmarked" });
+    if (!userId) {
+      console.log("❌ Error: User not authenticated");
+      return res.status(401).json({ error: "Unauthorized. Please log in." });
     }
+
+    const bookmarkedRecipes = await Recipe.find({ favoritedBy: userId });
+
+    console.log("📌 Found Bookmarked Recipes:", bookmarkedRecipes);
+
+    if (bookmarkedRecipes.length === 0) {
+      return res.status(200).json({ message: "No bookmarked recipes found", bookmarkedRecipes: [] });
+    }
+
+    res.status(200).json({ bookmarkedRecipes });
+
   } catch (error) {
-    res.status(500).json({ error: "Error toggling bookmark" });
+    console.log("❌ Error fetching bookmarked recipes:", error.message);
+    res.status(500).json({ error: error.message || "Failed to fetch bookmarked recipes" });
   }
 };
+
+
+
+
