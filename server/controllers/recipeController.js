@@ -102,7 +102,6 @@ export const toggleBookmarkRecipe = async (req, res) => {
   });
 };
 
-
 export const getBookmarkedRecipes = async (req, res) => {
   try {
     const userId = req.user?._id;
@@ -129,7 +128,3 @@ export const getBookmarkedRecipes = async (req, res) => {
     res.status(500).json({ error: error.message || "Failed to fetch bookmarked recipes" });
   }
 };
-
-
-
-

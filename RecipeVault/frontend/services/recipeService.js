@@ -108,8 +108,6 @@ export const toggleBookmarkRecipe = async (recipeId, userId, token) => {
   }
 };
 
-
-
 export const fetchBookmarkedRecipes = async (token) => {
   try {
     const response = await fetch(`${API_URL}/bookmarked/meow`, {
