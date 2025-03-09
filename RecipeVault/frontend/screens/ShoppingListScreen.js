@@ -10,7 +10,7 @@ import {
 import { useTheme } from "../context/ThemeContext";
 import { getShoppingList, removeFromShoppingList } from "../services/bookmarkService";
 import { AuthContext } from "../context/AuthContext";
-import { Checkbox } from "react-native-paper";
+import { Checkbox, Button, Menu, Provider } from "react-native-paper"; // 📦 ADDED
 import { useFocusEffect } from "@react-navigation/native";
 
 export default function ShoppingListScreen({ navigation }) {
@@ -20,8 +20,13 @@ export default function ShoppingListScreen({ navigation }) {
   const [shoppingList, setShoppingList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedItems, setSelectedItems] = useState({});
+  const [menuVisible, setMenuVisible] = useState({});
+  const [selectedAdults, setSelectedAdults] = useState({});
+  const [selectedKids, setSelectedKids] = useState({});
 
-  // ✅ Fetch Shopping List (Reusable)
+  const adultOptions = [0, 1, 2, 3, 4, 5];
+  const kidOptions = [0, 1, 2, 3, 4, 5];
+
   const fetchShoppingList = async () => {
     setLoading(true);
     try {
@@ -39,14 +44,12 @@ export default function ShoppingListScreen({ navigation }) {
     setLoading(false);
   };
 
-  // ✅ Auto-refresh on focus
   useFocusEffect(
     useCallback(() => {
       fetchShoppingList();
     }, [token])
   );
 
-  // ✅ Toggle checkbox selection
   const toggleSelection = (recipeId) => {
     setSelectedItems((prev) => ({
       ...prev,
@@ -54,7 +57,6 @@ export default function ShoppingListScreen({ navigation }) {
     }));
   };
 
-  // ✅ Remove selected items from shopping list
   const handleRemoveSelected = async () => {
     const selectedRecipeIds = Object.keys(selectedItems).filter((id) => selectedItems[id]);
 
@@ -67,7 +69,7 @@ export default function ShoppingListScreen({ navigation }) {
       const res = await removeFromShoppingList(user._id, selectedRecipeIds);
       if (res && res.shoppingList) {
         setSelectedItems({});
-        await fetchShoppingList(); // Force refresh from backend
+        await fetchShoppingList();
       } else {
         alert("Failed to remove items.");
       }
@@ -77,7 +79,73 @@ export default function ShoppingListScreen({ navigation }) {
     }
   };
 
-  // ✅ Render recipe card
+  // ✅ Dropdown Menus for Adults/Kids
+  const renderDropdowns = (itemId) => (
+    <View style={styles.dropdownRow}>
+      <View style={styles.dropdownBox}>
+        <Text style={[styles.dropdownLabel, isDarkMode && styles.darkText]}>Adults:</Text>
+        <Menu
+          visible={menuVisible[`adult-${itemId}`]}
+          onDismiss={() =>
+            setMenuVisible((prev) => ({ ...prev, [`adult-${itemId}`]: false }))
+          }
+          anchor={
+            <Button
+              mode="outlined"
+              onPress={() =>
+                setMenuVisible((prev) => ({ ...prev, [`adult-${itemId}`]: true }))
+              }
+            >
+              {selectedAdults[itemId] ?? 0}
+            </Button>
+          }
+        >
+          {adultOptions.map((num) => (
+            <Menu.Item
+              key={num}
+              onPress={() => {
+                setSelectedAdults((prev) => ({ ...prev, [itemId]: num }));
+                setMenuVisible((prev) => ({ ...prev, [`adult-${itemId}`]: false }));
+              }}
+              title={`${num}`}
+            />
+          ))}
+        </Menu>
+      </View>
+
+      <View style={styles.dropdownBox}>
+        <Text style={[styles.dropdownLabel, isDarkMode && styles.darkText]}>Kids:</Text>
+        <Menu
+          visible={menuVisible[`kid-${itemId}`]}
+          onDismiss={() =>
+            setMenuVisible((prev) => ({ ...prev, [`kid-${itemId}`]: false }))
+          }
+          anchor={
+            <Button
+              mode="outlined"
+              onPress={() =>
+                setMenuVisible((prev) => ({ ...prev, [`kid-${itemId}`]: true }))
+              }
+            >
+              {selectedKids[itemId] ?? 0}
+            </Button>
+          }
+        >
+          {kidOptions.map((num) => (
+            <Menu.Item
+              key={num}
+              onPress={() => {
+                setSelectedKids((prev) => ({ ...prev, [itemId]: num }));
+                setMenuVisible((prev) => ({ ...prev, [`kid-${itemId}`]: false }));
+              }}
+              title={`${num}`}
+            />
+          ))}
+        </Menu>
+      </View>
+    </View>
+  );
+
   const renderItem = ({ item }) => (
     <TouchableOpacity
       style={[styles.card, isDarkMode && styles.darkCard]}
@@ -93,38 +161,42 @@ export default function ShoppingListScreen({ navigation }) {
             {item.name || "Untitled Recipe"}
           </Text>
           <Text style={[styles.desc, isDarkMode && styles.darkText]}>
-            {item.description ? item.description : "No description available"}
+            {item.description || "No description available"}
           </Text>
         </View>
       </View>
+
+      {/* 👇 Add Dropdowns for Adults and Kids */}
+      {renderDropdowns(item._id)}
     </TouchableOpacity>
   );
 
   return (
-    <View style={[styles.container, isDarkMode && styles.darkContainer]}>
-      <Text style={[styles.header, isDarkMode && styles.darkText]}>Shopping List 🛒</Text>
+    <Provider>
+      <View style={[styles.container, isDarkMode && styles.darkContainer]}>
+        <Text style={[styles.header, isDarkMode && styles.darkText]}>Shopping List 🛒</Text>
 
-      {loading ? (
-        <ActivityIndicator size="large" color="#007bff" />
-      ) : shoppingList.length === 0 ? (
-        <Text style={[styles.emptyText, isDarkMode && styles.darkText]}>
-          Your shopping list is empty.
-        </Text>
-      ) : (
-        <>
-          <FlatList
-            data={shoppingList}
-            keyExtractor={(item) => item._id}
-            renderItem={renderItem}
-            contentContainerStyle={{ paddingBottom: 20 }}
-          />
-
-          <TouchableOpacity style={styles.removeButton} onPress={handleRemoveSelected}>
-            <Text style={styles.buttonText}>Remove Selected</Text>
-          </TouchableOpacity>
-        </>
-      )}
-    </View>
+        {loading ? (
+          <ActivityIndicator size="large" color="#007bff" />
+        ) : shoppingList.length === 0 ? (
+          <Text style={[styles.emptyText, isDarkMode && styles.darkText]}>
+            Your shopping list is empty.
+          </Text>
+        ) : (
+          <>
+            <FlatList
+              data={shoppingList}
+              keyExtractor={(item) => item._id}
+              renderItem={renderItem}
+              contentContainerStyle={{ paddingBottom: 20 }}
+            />
+            <TouchableOpacity style={styles.removeButton} onPress={handleRemoveSelected}>
+              <Text style={styles.buttonText}>Remove Selected</Text>
+            </TouchableOpacity>
+          </>
+        )}
+      </View>
+    </Provider>
   );
 }
 
@@ -196,5 +268,19 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  dropdownRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 12,
+  },
+  dropdownBox: {
+    flex: 0.48,
+  },
+  dropdownLabel: {
+    marginBottom: 4,
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#333",
   },
 });
