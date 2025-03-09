@@ -1,26 +1,40 @@
 import Recipe from "../models/recipeModel.js";
 import { ApiError } from "../utils/ApiError.js";
+import { User } from "../models/userModel.js";
 
 export const unbookmarkRecipes = async (req, res) => {
-    const userId = req.user._id; // Extract user ID from verified JWT
-    const { recipeIds } = req.body; // Expect an array of recipe IDs
-
-    if (!recipeIds || !Array.isArray(recipeIds) || recipeIds.length === 0) {
+    try {
+      const userId = req.user._id;
+      const { recipeIds } = req.body;
+  
+      if (!recipeIds || !Array.isArray(recipeIds) || recipeIds.length === 0) {
         throw new ApiError(400, "Invalid recipe IDs");
-    }
-
-    // Remove userId from favoritedBy in multiple recipes
-    const result = await Recipe.updateMany(
-        { _id: { $in: recipeIds } }, // Find recipes by given IDs
-        { $pull: { favoritedBy: userId } } // Remove userId from favoritedBy array
-    );
-
-    if (result.modifiedCount === 0) {
+      }
+  
+      // 1. Pull userId from Recipe.favoritedBy in all specified recipes
+      const recipeUpdateResult = await Recipe.updateMany(
+        { _id: { $in: recipeIds } },
+        { $pull: { favoritedBy: userId } }
+      );
+  
+      // 2. Pull recipeIds from User.bookmarks
+      const userUpdateResult = await User.updateOne(
+        { _id: userId },
+        { $pull: { bookmarks: { $in: recipeIds } } }
+      );
+  
+      // If no bookmarks were removed at all
+      if (recipeUpdateResult.modifiedCount === 0 && userUpdateResult.modifiedCount === 0) {
         throw new ApiError(404, "No bookmarks found to remove");
-    }
-
-    res.json({
+      }
+  
+      res.json({
         message: "Recipes unbookmarked successfully",
-        modifiedCount: result.modifiedCount
-    });
-};
+        recipesModified: recipeUpdateResult.modifiedCount,
+        userBookmarksModified: userUpdateResult.modifiedCount,
+      });
+    } catch (error) {
+      console.error("🔴 Unbookmark Error:", error);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  };

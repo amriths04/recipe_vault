@@ -1,5 +1,7 @@
 import Recipe from "../models/recipeModel.js";
 import Bookmark from "../models/bookmarkModel.js";
+import { User } from "../models/userModel.js";
+
 
 // 📌 Create a Recipe
 export const createRecipe = async (req, res) => {
@@ -73,33 +75,51 @@ export const deleteRecipe = async (req, res) => {
   }
 };
 
-export const toggleBookmarkRecipe = async (req, res) => {
-  const { recipeId } = req.body;
-  const userId = req.user._id; // Ensure this comes from auth middleware
+export const toggleBookmarkRecipe = async (req, res, next) => {
+  try {
+    const { recipeId } = req.body;
+    const userId = req.user._id; // ✅ From auth middleware
 
-  // Find the recipe by ID
-  const recipe = await Recipe.findById(recipeId);
-  if (!recipe) {
+    // 🔍 1. Check if Recipe exists
+    const recipe = await Recipe.findById(recipeId);
+    if (!recipe) {
       throw new ApiError(404, "Recipe not found");
-  }
+    }
 
-  // Check if the user has already bookmarked it
-  const isBookmarked = recipe.favoritedBy.includes(userId);
+    // 🔍 2. Check if user already bookmarked it
+    const isBookmarked = recipe.favoritedBy.includes(userId);
 
-  if (isBookmarked) {
-      // If bookmarked, remove the user from favoritedBy
-      recipe.favoritedBy = recipe.favoritedBy.filter(id => id.toString() !== userId.toString());
-  } else {
-      // If not bookmarked, add the user to favoritedBy
+    // 🔄 3. Update Recipe.favoritedBy and User.bookmarks
+    if (isBookmarked) {
+      // 🔴 Remove user from recipe.favoritedBy
+      recipe.favoritedBy = recipe.favoritedBy.filter(
+        (id) => id.toString() !== userId.toString()
+      );
+
+      // 🔴 Remove recipe from user's bookmarks
+      await User.findByIdAndUpdate(userId, {
+        $pull: { bookmarks: recipeId },
+      });
+    } else {
+      // ✅ Add user to recipe.favoritedBy
       recipe.favoritedBy.push(userId);
+
+      // ✅ Add recipe to user's bookmarks
+      await User.findByIdAndUpdate(userId, {
+        $addToSet: { bookmarks: recipeId }, // avoid duplicates
+      });
+    }
+
+    // 💾 Save updated recipe
+    await recipe.save();
+
+    return res.status(200).json({
+      message: `Recipe bookmark ${isBookmarked ? "removed" : "added"}`,
+      isBookmarked: !isBookmarked,
+    });
+  } catch (error) {
+    next(error); // Or handle res.status(500) fallback if no global error handler
   }
-
-  await recipe.save(); // Save changes to DB
-
-  res.status(200).json({ 
-      message: "Recipe bookmark toggled", 
-      isBookmarked: !isBookmarked 
-  });
 };
 
 export const getBookmarkedRecipes = async (req, res) => {

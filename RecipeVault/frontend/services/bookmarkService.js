@@ -1,9 +1,9 @@
-const API_URL = "http://192.168.71.126:5000/api/bookmarks";
+const API_URL = "http://192.168.71.126:5000/api";
 
 
 export const removeBookmarks = async (recipeIds, token) => {
   try {
-    const response = await fetch(`${API_URL}/unbookmark`, {
+    const response = await fetch(`${API_URL}/bookmarks/unbookmark`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
@@ -26,3 +26,23 @@ export const removeBookmarks = async (recipeIds, token) => {
     return { error: "Something went wrong!" };
   }
 };
+
+export const sendToShoppingList = async (recipeIds, token) => {
+  try {
+    const response = await fetch(`${API_URL}/shopping-list/add`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ recipeIds }),
+    });
+
+    const jsonResponse = await response.json();
+    return jsonResponse;
+  } catch (error) {
+    console.error("🔴 Send to Shopping List error:", error);
+    return { error: "Something went wrong!" };
+  }
+};
+

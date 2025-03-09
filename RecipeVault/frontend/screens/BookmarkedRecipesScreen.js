@@ -1,10 +1,10 @@
-import React, { useEffect, useState, useContext, useCallback } from "react";
+import React, { useEffect, useState, useContext, useCallback } from "react"; 
 import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, Image, Button } from "react-native";
 import { useNavigation, useFocusEffect } from "@react-navigation/native"; 
 import { useTheme } from "../context/ThemeContext";
 import { AuthContext } from "../context/AuthContext"; 
-import { fetchBookmarkedRecipes,} from "../services/recipeService"; // ✅ Import removeBookmarks
-import {  removeBookmarks ,} from "../services/bookmarkService"; // ✅ Import removeBookmarks
+import { fetchBookmarkedRecipes } from "../services/recipeService";
+import { removeBookmarks, sendToShoppingList } from "../services/bookmarkService"; // ✅ Import both
 
 export default function BookmarkedRecipesScreen() {
   const { isDarkMode } = useTheme();
@@ -15,7 +15,7 @@ export default function BookmarkedRecipesScreen() {
   const [loading, setLoading] = useState(true);
   const [selectedRecipes, setSelectedRecipes] = useState([]); // ✅ Track selected recipes
 
-  // 🔹 Function to load bookmarked recipes
+  // 🔹 Load bookmarked recipes
   const loadBookmarkedRecipes = async () => {
     if (!token) return;
     setLoading(true);
@@ -24,30 +24,43 @@ export default function BookmarkedRecipesScreen() {
     setLoading(false);
   };
 
-  // 🔹 Function to handle select/deselect of a recipe
+  // 🔹 Select/Deselect a recipe
   const toggleSelection = (recipeId) => {
     setSelectedRecipes((prevSelected) =>
       prevSelected.includes(recipeId)
-        ? prevSelected.filter((id) => id !== recipeId) // Deselect if already selected
-        : [...prevSelected, recipeId] // Select if not already selected
+        ? prevSelected.filter((id) => id !== recipeId)
+        : [...prevSelected, recipeId]
     );
   };
 
-  // 🔹 Function to handle removing selected recipes
+  // 🔹 Remove selected recipes from bookmarks
   const handleRemoveBookmarks = async () => {
     if (selectedRecipes.length > 0) {
       const result = await removeBookmarks(selectedRecipes, token);
       if (!result.error) {
         setBookmarkedRecipes((prev) => prev.filter((recipe) => !selectedRecipes.includes(recipe._id)));
-        setSelectedRecipes([]); // Reset selection after removal
+        setSelectedRecipes([]);
       }
     }
   };
 
-  // 🔹 Refresh screen when it comes back into focus
+  // 🔹 Send selected recipes to shopping list
+  const handleSendToShoppingList = async () => {
+    if (selectedRecipes.length > 0) {
+      const result = await sendToShoppingList(selectedRecipes, token);
+      if (!result.error) {
+        alert("✅ Sent to shopping list successfully!");
+        setSelectedRecipes([]); // Reset selection
+      } else {
+        alert("❌ Failed to send to shopping list.");
+      }
+    }
+  };
+
+  // 🔹 Refresh when screen comes into focus
   useFocusEffect(
     useCallback(() => {
-      loadBookmarkedRecipes(); // ✅ Reload recipes when screen is focused
+      loadBookmarkedRecipes();
     }, [token])
   );
 
@@ -63,13 +76,14 @@ export default function BookmarkedRecipesScreen() {
     <View style={[styles.container, isDarkMode && styles.darkContainer]}>
       <Text style={[styles.heading, isDarkMode && styles.darkText]}>📌 Bookmarked Recipes</Text>
 
-      {/* Select recipes */}
+      {/* Selection Actions */}
       {selectedRecipes.length > 0 && (
         <View style={styles.selectedTextContainer}>
           <Text style={styles.selectedText}>
             {selectedRecipes.length} {selectedRecipes.length === 1 ? "recipe" : "recipes"} selected
           </Text>
           <Button title="Remove Selected" onPress={handleRemoveBookmarks} color="#e74c3c" />
+          <Button title="Send to Shopping List" onPress={handleSendToShoppingList} color="#2ecc71" />
         </View>
       )}
 
