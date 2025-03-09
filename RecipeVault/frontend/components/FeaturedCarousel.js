@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, Image, StyleSheet, Dimensions, ActivityIndicator } from "react-native";
+import { View, Text, Image, StyleSheet, Dimensions, ActivityIndicator, TouchableOpacity } from "react-native";
 import Carousel from "react-native-reanimated-carousel";
 import { fetchRecipes } from "../services/recipeService"; // ✅ Make sure path is correct
+import { useNavigation } from '@react-navigation/native';
 
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = width * 0.9;
@@ -10,6 +11,7 @@ const CARD_HEIGHT = 189;
 const FeaturedCarousel = () => {
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigation = useNavigation(); // Navigation hook
 
   useEffect(() => {
     const loadRecipes = async () => {
@@ -27,12 +29,15 @@ const FeaturedCarousel = () => {
   }, []);
 
   const renderItem = ({ item }) => (
-    <View style={styles.slide}>
+    <TouchableOpacity
+      style={styles.slide}
+      onPress={() => navigation.navigate('RecipeDetails', { recipeId: item._id })} // Navigate to the RecipeDetails screen
+    >
       <Image source={{ uri: item.image || "https://via.placeholder.com/400x200?text=No+Image" }} style={styles.image} />
       <View style={styles.overlay}>
         <Text style={styles.title}>{item.name || "Untitled Recipe"}</Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   if (loading) {
