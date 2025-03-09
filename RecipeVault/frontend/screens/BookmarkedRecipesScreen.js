@@ -1,17 +1,19 @@
 import React, { useEffect, useState, useContext, useCallback } from "react";
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, Image } from "react-native";
-import { useNavigation, useFocusEffect } from "@react-navigation/native"; // ✅ Import useFocusEffect
+import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, Image, Button } from "react-native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native"; 
 import { useTheme } from "../context/ThemeContext";
 import { AuthContext } from "../context/AuthContext"; 
-import { fetchBookmarkedRecipes } from "../services/recipeService";
+import { fetchBookmarkedRecipes,} from "../services/recipeService"; // ✅ Import removeBookmarks
+import {  removeBookmarks ,} from "../services/bookmarkService"; // ✅ Import removeBookmarks
 
 export default function BookmarkedRecipesScreen() {
   const { isDarkMode } = useTheme();
   const { token } = useContext(AuthContext);
-  const navigation = useNavigation(); 
+  const navigation = useNavigation();
 
   const [bookmarkedRecipes, setBookmarkedRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedRecipes, setSelectedRecipes] = useState([]); // ✅ Track selected recipes
 
   // 🔹 Function to load bookmarked recipes
   const loadBookmarkedRecipes = async () => {
@@ -20,6 +22,26 @@ export default function BookmarkedRecipesScreen() {
     const recipes = await fetchBookmarkedRecipes(token);
     setBookmarkedRecipes(recipes);
     setLoading(false);
+  };
+
+  // 🔹 Function to handle select/deselect of a recipe
+  const toggleSelection = (recipeId) => {
+    setSelectedRecipes((prevSelected) =>
+      prevSelected.includes(recipeId)
+        ? prevSelected.filter((id) => id !== recipeId) // Deselect if already selected
+        : [...prevSelected, recipeId] // Select if not already selected
+    );
+  };
+
+  // 🔹 Function to handle removing selected recipes
+  const handleRemoveBookmarks = async () => {
+    if (selectedRecipes.length > 0) {
+      const result = await removeBookmarks(selectedRecipes, token);
+      if (!result.error) {
+        setBookmarkedRecipes((prev) => prev.filter((recipe) => !selectedRecipes.includes(recipe._id)));
+        setSelectedRecipes([]); // Reset selection after removal
+      }
+    }
   };
 
   // 🔹 Refresh screen when it comes back into focus
@@ -41,6 +63,16 @@ export default function BookmarkedRecipesScreen() {
     <View style={[styles.container, isDarkMode && styles.darkContainer]}>
       <Text style={[styles.heading, isDarkMode && styles.darkText]}>📌 Bookmarked Recipes</Text>
 
+      {/* Select recipes */}
+      {selectedRecipes.length > 0 && (
+        <View style={styles.selectedTextContainer}>
+          <Text style={styles.selectedText}>
+            {selectedRecipes.length} {selectedRecipes.length === 1 ? "recipe" : "recipes"} selected
+          </Text>
+          <Button title="Remove Selected" onPress={handleRemoveBookmarks} color="#e74c3c" />
+        </View>
+      )}
+
       {bookmarkedRecipes.length === 0 ? (
         <Text style={[styles.noRecipesText, isDarkMode && styles.darkText]}>No bookmarks yet.</Text>
       ) : (
@@ -59,6 +91,10 @@ export default function BookmarkedRecipesScreen() {
                   {item.description}
                 </Text>
               </View>
+              {/* Select Circle */}
+              <TouchableOpacity onPress={() => toggleSelection(item._id)} style={[styles.selectCircle, selectedRecipes.includes(item._id) && styles.selectedCircle]}>
+                {selectedRecipes.includes(item._id) && <Text style={styles.selectCircleText}>✓</Text>}
+              </TouchableOpacity>
             </TouchableOpacity>
           )}
         />
@@ -92,4 +128,26 @@ const styles = StyleSheet.create({
 
   recipeName: { fontSize: 18, fontWeight: "bold", marginBottom: 5 },
   recipeDesc: { fontSize: 14, color: "#555" },
+
+  selectedTextContainer: { flexDirection: "row", justifyContent: "space-between", marginBottom: 10 },
+  selectedText: { fontSize: 16, fontWeight: "bold" },
+
+  // Circle Style
+  selectCircle: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    borderWidth: 2,
+    borderColor: "#3498db",
+    justifyContent: "center",
+    alignItems: "center",
+    marginLeft: 10,
+  },
+  selectedCircle: {
+    backgroundColor: "#3498db", // Filled when selected
+  },
+  selectCircleText: {
+    color: "#fff",
+    fontSize: 18,
+  },
 });

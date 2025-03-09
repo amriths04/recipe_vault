@@ -130,3 +130,35 @@ export const fetchBookmarkedRecipes = async (token) => {
     return [];
   }
 };
+
+export const removeBookmarks = async (recipeIds, token) => {
+  try {
+    const response = await fetch(`${API_URL}/bookmarks/unbookmark`, { // Bulk unbookmarking endpoint
+      method: "DELETE", // Use DELETE method to remove bookmarks
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`, // Pass token for authentication
+      },
+      body: JSON.stringify({ recipeIds }), // Send array of recipe IDs to be removed
+    });
+
+    const contentType = response.headers.get("content-type");
+
+    if (!contentType || !contentType.includes("application/json")) {
+      const textResponse = await response.text();
+      console.error("🔴 Non-JSON Response:", textResponse);
+      return { error: "Unexpected server response" };
+    }
+
+    const jsonResponse = await response.json();
+
+    if (!jsonResponse.success) {
+      return { error: jsonResponse.message || "Failed to remove bookmarks" };
+    }
+
+    return jsonResponse.data; // Return success data
+  } catch (error) {
+    console.error("🔴 Remove Bookmarks error:", error);
+    return { error: "Something went wrong!" };
+  }
+};
