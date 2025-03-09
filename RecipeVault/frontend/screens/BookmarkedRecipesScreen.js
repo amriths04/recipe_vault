@@ -8,7 +8,7 @@ import { removeBookmarks, sendToShoppingList } from "../services/bookmarkService
 
 export default function BookmarkedRecipesScreen() {
   const { isDarkMode } = useTheme();
-  const { token } = useContext(AuthContext);
+  const { token, user } = useContext(AuthContext); // ✅ Get user also
   const navigation = useNavigation();
 
   const [bookmarkedRecipes, setBookmarkedRecipes] = useState([]);
@@ -46,8 +46,8 @@ export default function BookmarkedRecipesScreen() {
 
   // 🔹 Send selected recipes to shopping list
   const handleSendToShoppingList = async () => {
-    if (selectedRecipes.length > 0) {
-      const result = await sendToShoppingList(selectedRecipes, token);
+    if (selectedRecipes.length > 0 && user?._id) {
+      const result = await sendToShoppingList(selectedRecipes, user._id); // ✅ Use user._id instead of token
       if (!result.error) {
         alert("✅ Sent to shopping list successfully!");
         setSelectedRecipes([]); // Reset selection
