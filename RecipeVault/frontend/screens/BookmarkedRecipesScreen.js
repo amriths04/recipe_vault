@@ -79,11 +79,26 @@ export default function BookmarkedRecipesScreen() {
       {/* Selection Actions */}
       {selectedRecipes.length > 0 && (
         <View style={styles.selectedTextContainer}>
-          <Text style={styles.selectedText}>
-            {selectedRecipes.length} {selectedRecipes.length === 1 ? "recipe" : "recipes"} selected
+          <Text
+            style={[styles.selectedText, isDarkMode && styles.darkText]}
+          >
+            {selectedRecipes.length}{" "}
+            {selectedRecipes.length === 1 ? "recipe" : "recipes"} selected
           </Text>
-          <Button title="Remove Selected" onPress={handleRemoveBookmarks} color="#e74c3c" />
-          <Button title="Send to Shopping List" onPress={handleSendToShoppingList} color="#2ecc71" />
+          <View style={styles.actionButtons}>
+            <TouchableOpacity
+              style={[styles.actionButton, styles.removeButton]}
+              onPress={handleRemoveBookmarks}
+            >
+              <Text style={styles.buttonText}>Remove</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.actionButton, styles.sendButton]}
+              onPress={handleSendToShoppingList}
+            >
+              <Text style={styles.buttonText}>Send to Shopping List</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       )}
 
@@ -105,9 +120,16 @@ export default function BookmarkedRecipesScreen() {
                   {item.description}
                 </Text>
               </View>
-              {/* Select Circle */}
-              <TouchableOpacity onPress={() => toggleSelection(item._id)} style={[styles.selectCircle, selectedRecipes.includes(item._id) && styles.selectedCircle]}>
-                {selectedRecipes.includes(item._id) && <Text style={styles.selectCircleText}>✓</Text>}
+              <TouchableOpacity
+                onPress={() => toggleSelection(item._id)}
+                style={[
+                  styles.selectCircle,
+                  selectedRecipes.includes(item._id) && styles.selectedCircle,
+                ]}
+              >
+                {selectedRecipes.includes(item._id) && (
+                  <Text style={styles.selectCircleText}>✓</Text>
+                )}
               </TouchableOpacity>
             </TouchableOpacity>
           )}
@@ -121,10 +143,23 @@ const styles = StyleSheet.create({
   container: { flex: 1, padding: 20, backgroundColor: "#f8f8f8" },
   darkContainer: { backgroundColor: "#121212" },
 
-  heading: { fontSize: 22, fontWeight: "bold", marginBottom: 15, textAlign: "center", color: "black" },
-  darkText: { color: "white" },
+  heading: {
+    fontSize: 22,
+    fontWeight: "bold",
+    marginBottom: 15,
+    textAlign: "center",
+    color: "black",
+  },
+  darkText: {
+    color: "white",
+  },
 
-  noRecipesText: { fontSize: 16, textAlign: "center", marginTop: 20, color: "gray" },
+  noRecipesText: {
+    fontSize: 16,
+    textAlign: "center",
+    marginTop: 20,
+    color: "gray",
+  },
 
   recipeCard: {
     backgroundColor: "#fff",
@@ -135,7 +170,9 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     elevation: 3,
   },
-  darkCard: { backgroundColor: "#1e1e1e" },
+  darkCard: {
+    backgroundColor: "#1e1e1e",
+  },
 
   recipeImage: { width: 60, height: 60, borderRadius: 10, marginRight: 15 },
   textContainer: { flex: 1 },
@@ -143,10 +180,37 @@ const styles = StyleSheet.create({
   recipeName: { fontSize: 18, fontWeight: "bold", marginBottom: 5 },
   recipeDesc: { fontSize: 14, color: "#555" },
 
-  selectedTextContainer: { flexDirection: "row", justifyContent: "space-between", marginBottom: 10 },
-  selectedText: { fontSize: 16, fontWeight: "bold" },
+  selectedTextContainer: {
+    marginBottom: 10,
+  },
+  selectedText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
 
-  // Circle Style
+  actionButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 10,
+  },
+  actionButton: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  removeButton: {
+    backgroundColor: "#e74c3c",
+  },
+  sendButton: {
+    backgroundColor: "#2ecc71",
+  },
+  buttonText: {
+    color: "white",
+    fontWeight: "bold",
+  },
+
   selectCircle: {
     width: 30,
     height: 30,
@@ -158,7 +222,7 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   selectedCircle: {
-    backgroundColor: "#3498db", // Filled when selected
+    backgroundColor: "#3498db",
   },
   selectCircleText: {
     color: "#fff",

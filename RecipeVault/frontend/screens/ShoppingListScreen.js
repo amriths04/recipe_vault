@@ -1,4 +1,4 @@
-import React, { useState, useContext, useCallback } from "react";
+import React, { useEffect, useState, useContext, useCallback } from "react";
 import {
   View,
   Text,
@@ -6,318 +6,253 @@ import {
   FlatList,
   ActivityIndicator,
   TouchableOpacity,
-  SafeAreaView,
+  Image,
 } from "react-native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { useTheme } from "../context/ThemeContext";
-import { getShoppingList, removeFromShoppingList } from "../services/bookmarkService";
 import { AuthContext } from "../context/AuthContext";
-import { Checkbox, Button, Menu, Provider } from "react-native-paper";
-import { useFocusEffect } from "@react-navigation/native";
+import { fetchBookmarkedRecipes } from "../services/recipeService";
+import {
+  removeBookmarks,
+  sendToShoppingList,
+} from "../services/bookmarkService";
 
-export default function ShoppingListScreen({ navigation }) {
+export default function BookmarkedRecipesScreen() {
   const { isDarkMode } = useTheme();
-  const { user, token } = useContext(AuthContext);
+  const { token, user } = useContext(AuthContext);
+  const navigation = useNavigation();
 
-  const [shoppingList, setShoppingList] = useState([]);
+  const [bookmarkedRecipes, setBookmarkedRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedItems, setSelectedItems] = useState({});
-  const [menuVisible, setMenuVisible] = useState({});
-  const [selectedAdults, setSelectedAdults] = useState({});
-  const [selectedKids, setSelectedKids] = useState({});
+  const [selectedRecipes, setSelectedRecipes] = useState([]);
 
-  const adultOptions = [0, 1, 2, 3, 4, 5];
-  const kidOptions = [0, 1, 2, 3, 4, 5];
-
-  const fetchShoppingList = async () => {
+  const loadBookmarkedRecipes = async () => {
+    if (!token) return;
     setLoading(true);
-    try {
-      const res = await getShoppingList(token);
-      if (res && res.shoppingList) {
-        setShoppingList(res.shoppingList);
-      } else {
-        console.error("❌ Failed to fetch shopping list");
-        setShoppingList([]);
-      }
-    } catch (error) {
-      console.error("❌ API Error:", error.message);
-      setShoppingList([]);
-    }
+    const recipes = await fetchBookmarkedRecipes(token);
+    setBookmarkedRecipes(recipes);
     setLoading(false);
+  };
+
+  const toggleSelection = (recipeId) => {
+    setSelectedRecipes((prevSelected) =>
+      prevSelected.includes(recipeId)
+        ? prevSelected.filter((id) => id !== recipeId)
+        : [...prevSelected, recipeId]
+    );
+  };
+
+  const handleRemoveBookmarks = async () => {
+    if (selectedRecipes.length > 0) {
+      const result = await removeBookmarks(selectedRecipes, token);
+      if (!result.error) {
+        setBookmarkedRecipes((prev) =>
+          prev.filter((recipe) => !selectedRecipes.includes(recipe._id))
+        );
+        setSelectedRecipes([]);
+      }
+    }
+  };
+
+  const handleSendToShoppingList = async () => {
+    if (selectedRecipes.length > 0 && user?._id) {
+      const result = await sendToShoppingList(selectedRecipes, user._id);
+      if (!result.error) {
+        alert("✅ Sent to shopping list successfully!");
+        setSelectedRecipes([]);
+      } else {
+        alert("❌ Failed to send to shopping list.");
+      }
+    }
   };
 
   useFocusEffect(
     useCallback(() => {
-      fetchShoppingList();
+      loadBookmarkedRecipes();
     }, [token])
   );
 
-  const toggleSelection = (recipeId) => {
-    setSelectedItems((prev) => ({
-      ...prev,
-      [recipeId]: !prev[recipeId],
-    }));
-  };
-
-  const handleRemoveSelected = async () => {
-    const selectedRecipeIds = Object.keys(selectedItems).filter((id) => selectedItems[id]);
-
-    if (selectedRecipeIds.length === 0) {
-      alert("Please select at least one recipe to remove!");
-      return;
-    }
-
-    try {
-      const res = await removeFromShoppingList(user._id, selectedRecipeIds);
-      if (res && res.shoppingList) {
-        setSelectedItems({});
-        await fetchShoppingList();
-      } else {
-        alert("Failed to remove items.");
-      }
-    } catch (error) {
-      console.error("Error removing from shopping list:", error.message);
-      alert("Something went wrong.");
-    }
-  };
-
-  const handleCalculateIngredients = () => {
-    const selectedRecipeIds = Object.keys(selectedItems).filter((id) => selectedItems[id]);
-    if (selectedRecipeIds.length === 0) {
-      alert("Please select at least one recipe to calculate!");
-      return;
-    }
-
-    const payload = selectedRecipeIds.map((id) => ({
-      recipeId: id,
-      adults: selectedAdults[id] ?? 0,
-      kids: selectedKids[id] ?? 0,
-    }));
-
-    navigation.navigate("CalculatedIngredients", { selectedRecipes: payload });
-  };
-
-  const renderDropdowns = (itemId) => (
-    <View style={styles.dropdownRow}>
-      <View style={styles.dropdownBox}>
-        <Text style={[styles.dropdownLabel, isDarkMode && styles.darkText]}>Adults:</Text>
-        <Menu
-          visible={menuVisible[`adult-${itemId}`]}
-          onDismiss={() =>
-            setMenuVisible((prev) => ({ ...prev, [`adult-${itemId}`]: false }))
-          }
-          anchor={
-            <Button
-              mode="outlined"
-              onPress={() =>
-                setMenuVisible((prev) => ({ ...prev, [`adult-${itemId}`]: true }))
-              }
-            >
-              {selectedAdults[itemId] ?? 0}
-            </Button>
-          }
-        >
-          {adultOptions.map((num) => (
-            <Menu.Item
-              key={num}
-              onPress={() => {
-                setSelectedAdults((prev) => ({ ...prev, [itemId]: num }));
-                setMenuVisible((prev) => ({ ...prev, [`adult-${itemId}`]: false }));
-              }}
-              title={`${num}`}
-            />
-          ))}
-        </Menu>
+  if (loading) {
+    return (
+      <View style={[styles.container, isDarkMode && styles.darkContainer]}>
+        <ActivityIndicator size="large" color="#3498db" />
       </View>
-
-      <View style={styles.dropdownBox}>
-        <Text style={[styles.dropdownLabel, isDarkMode && styles.darkText]}>Kids:</Text>
-        <Menu
-          visible={menuVisible[`kid-${itemId}`]}
-          onDismiss={() =>
-            setMenuVisible((prev) => ({ ...prev, [`kid-${itemId}`]: false }))
-          }
-          anchor={
-            <Button
-              mode="outlined"
-              onPress={() =>
-                setMenuVisible((prev) => ({ ...prev, [`kid-${itemId}`]: true }))
-              }
-            >
-              {selectedKids[itemId] ?? 0}
-            </Button>
-          }
-        >
-          {kidOptions.map((num) => (
-            <Menu.Item
-              key={num}
-              onPress={() => {
-                setSelectedKids((prev) => ({ ...prev, [itemId]: num }));
-                setMenuVisible((prev) => ({ ...prev, [`kid-${itemId}`]: false }));
-              }}
-              title={`${num}`}
-            />
-          ))}
-        </Menu>
-      </View>
-    </View>
-  );
-
-  const renderItem = ({ item }) => (
-    <TouchableOpacity
-      style={[styles.card, isDarkMode && styles.darkCard]}
-      onPress={() => navigation.navigate("RecipeDetails", { recipeId: item._id })}
-    >
-      <View style={styles.row}>
-        <Checkbox
-          status={selectedItems[item._id] ? "checked" : "unchecked"}
-          onPress={() => toggleSelection(item._id)}
-        />
-        <View style={styles.textContainer}>
-          <Text style={[styles.title, isDarkMode && styles.darkText]}>
-            {item.name || "Untitled Recipe"}
-          </Text>
-          <Text style={[styles.desc, isDarkMode && styles.darkText]}>
-            {item.description || "No description available"}
-          </Text>
-        </View>
-      </View>
-
-      {renderDropdowns(item._id)}
-    </TouchableOpacity>
-  );
+    );
+  }
 
   return (
-    <Provider>
-      <SafeAreaView style={[styles.container, isDarkMode && styles.darkContainer]}>
-        <Text style={[styles.header, isDarkMode && styles.darkText]}>Shopping List 🛒</Text>
+    <View style={[styles.container, isDarkMode && styles.darkContainer]}>
+      <Text style={[styles.heading, isDarkMode && styles.darkText]}>
+        📌 Bookmarked Recipes
+      </Text>
 
-        {loading ? (
-          <ActivityIndicator size="large" color="#007bff" />
-        ) : shoppingList.length === 0 ? (
-          <Text style={[styles.emptyText, isDarkMode && styles.darkText]}>
-            Your shopping list is empty.
+      {selectedRecipes.length > 0 && (
+        <View style={styles.selectedTextContainer}>
+          <Text
+            style={[styles.selectedText, isDarkMode && styles.darkText]}
+          >
+            {selectedRecipes.length}{" "}
+            {selectedRecipes.length === 1 ? "recipe" : "recipes"} selected
           </Text>
-        ) : (
-          <>
-            <FlatList
-              data={shoppingList}
-              keyExtractor={(item) => item._id}
-              renderItem={renderItem}
-              contentContainerStyle={{ paddingBottom: 140 }}
-            />
-            <View style={styles.footerButtonsFixed}>
-              <TouchableOpacity style={styles.calculateButton} onPress={handleCalculateIngredients}>
-                <Text style={styles.buttonText}>Calculate Ingredients</Text>
+
+          {/* Buttons */}
+          <View style={styles.actionButtons}>
+            <TouchableOpacity
+              style={[styles.actionButton, styles.removeButton]}
+              onPress={handleRemoveBookmarks}
+            >
+              <Text style={styles.buttonText}>Remove</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.actionButton, styles.sendButton]}
+              onPress={handleSendToShoppingList}
+            >
+              <Text style={styles.buttonText}>Send to Shopping List</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      {bookmarkedRecipes.length === 0 ? (
+        <Text style={[styles.noRecipesText, isDarkMode && styles.darkText]}>
+          No bookmarks yet.
+        </Text>
+      ) : (
+        <FlatList
+          data={bookmarkedRecipes}
+          keyExtractor={(item) => item._id}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={[styles.recipeCard, isDarkMode && styles.darkCard]}
+              onPress={() =>
+                navigation.navigate("RecipeDetails", { recipeId: item._id })
+              }
+            >
+              <Image
+                source={{ uri: item.image || "https://via.placeholder.com/150" }}
+                style={styles.recipeImage}
+              />
+              <View style={styles.textContainer}>
+                <Text
+                  style={[styles.recipeName, isDarkMode && styles.darkText]}
+                >
+                  {item.name}
+                </Text>
+                <Text
+                  style={[styles.recipeDesc, isDarkMode && styles.darkText]}
+                  numberOfLines={2}
+                >
+                  {item.description}
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => toggleSelection(item._id)}
+                style={[
+                  styles.selectCircle,
+                  selectedRecipes.includes(item._id) && styles.selectedCircle,
+                ]}
+              >
+                {selectedRecipes.includes(item._id) && (
+                  <Text style={styles.selectCircleText}>✓</Text>
+                )}
               </TouchableOpacity>
-              <TouchableOpacity style={styles.removeButton} onPress={handleRemoveSelected}>
-                <Text style={styles.buttonText}>Remove Selected</Text>
-              </TouchableOpacity>
-            </View>
-          </>
-        )}
-      </SafeAreaView>
-    </Provider>
+            </TouchableOpacity>
+          )}
+        />
+      )}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingTop: 50,
-    paddingHorizontal: 16,
-    backgroundColor: "#f8f8f8",
-  },
-  darkContainer: {
-    backgroundColor: "#121212",
-  },
-  header: {
+  container: { flex: 1, padding: 20, backgroundColor: "#f8f8f8" },
+  darkContainer: { backgroundColor: "#121212" },
+
+  heading: {
     fontSize: 22,
     fontWeight: "bold",
-    marginBottom: 16,
+    marginBottom: 15,
     textAlign: "center",
     color: "black",
   },
   darkText: {
     color: "white",
   },
-  emptyText: {
-    textAlign: "center",
+
+  noRecipesText: {
     fontSize: 16,
-    marginTop: 40,
-    color: "#555",
+    textAlign: "center",
+    marginTop: 20,
+    color: "gray",
   },
-  card: {
+
+  recipeCard: {
     backgroundColor: "#fff",
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 15,
     borderRadius: 10,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    marginBottom: 10,
     elevation: 3,
   },
   darkCard: {
     backgroundColor: "#1e1e1e",
   },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
+
+  recipeImage: { width: 60, height: 60, borderRadius: 10, marginRight: 15 },
+  textContainer: { flex: 1 },
+
+  recipeName: { fontSize: 18, fontWeight: "bold", marginBottom: 5 },
+  recipeDesc: { fontSize: 14, color: "#555" },
+
+  selectedTextContainer: {
+    marginBottom: 10,
   },
-  textContainer: {
-    flex: 1,
-    marginLeft: 10,
-  },
-  title: {
-    fontSize: 18,
+  selectedText: {
+    fontSize: 16,
     fontWeight: "bold",
-    color: "black",
+    marginBottom: 10,
   },
-  desc: {
-    fontSize: 14,
-    marginTop: 4,
-    color: "#555",
+
+  actionButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 10,
+  },
+  actionButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
   },
   removeButton: {
-    backgroundColor: "#ff4d4d",
-    padding: 15,
-    borderRadius: 10,
-    marginVertical: 6,
-    alignItems: "center",
+    backgroundColor: "#e74c3c", // 🔴 Consistent red
   },
-  calculateButton: {
-    backgroundColor: "#28a745",
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 6,
-    alignItems: "center",
+  sendButton: {
+    backgroundColor: "#2ecc71", // ✅ Consistent green
   },
   buttonText: {
     color: "white",
-    fontSize: 16,
     fontWeight: "bold",
+    fontSize: 15,
   },
-  dropdownRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 12,
+
+  selectCircle: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    borderWidth: 2,
+    borderColor: "#3498db",
+    justifyContent: "center",
+    alignItems: "center",
+    marginLeft: 10,
   },
-  dropdownBox: {
-    flex: 0.48,
+  selectedCircle: {
+    backgroundColor: "#3498db",
   },
-  dropdownLabel: {
-    marginBottom: 4,
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#333",
-  },
-  footerButtonsFixed: {
-    position: "absolute",
-    bottom: 10,
-    left: 0,
-    right: 0,
-    padding: 16,
-    backgroundColor: "#f8f8f8",
-    borderTopWidth: 1,
-    borderTopColor: "#ccc",
+  selectCircleText: {
+    color: "#fff",
+    fontSize: 18,
   },
 });
