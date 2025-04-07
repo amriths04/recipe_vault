@@ -5,7 +5,9 @@ import {
   StyleSheet,
   ScrollView,
   ActivityIndicator,
+  TouchableOpacity,
 } from "react-native";
+import { Checkbox } from "react-native-paper";
 import { useTheme } from "../context/ThemeContext";
 import { AuthContext } from "../context/AuthContext";
 import { fetchRecipeById } from "../services/recipeService";
@@ -16,6 +18,7 @@ export default function CalculatedIngredientsScreen({ route }) {
   const { token } = useContext(AuthContext);
   const [loading, setLoading] = useState(true);
   const [calculatedData, setCalculatedData] = useState([]);
+  const [selectedIngredients, setSelectedIngredients] = useState({}); // store checked state
 
   useEffect(() => {
     const fetchData = async () => {
@@ -28,7 +31,7 @@ export default function CalculatedIngredientsScreen({ route }) {
 
         const multiplier = adults + kids * 0.5;
 
-        const adjustedIngredients = recipe.ingredients.map((ing) => {
+        const adjustedIngredients = recipe.ingredients.map((ing, idx) => {
           const baseQty = parseFloat(ing.quantity);
           const adjustedQty = isNaN(baseQty)
             ? "N/A"
@@ -42,6 +45,7 @@ export default function CalculatedIngredientsScreen({ route }) {
         });
 
         results.push({
+          recipeId,
           name: recipe.name,
           description: recipe.description,
           ingredients: adjustedIngredients,
@@ -55,6 +59,34 @@ export default function CalculatedIngredientsScreen({ route }) {
     fetchData();
   }, [selectedRecipes, token]);
 
+  const toggleIngredient = (id) => {
+    setSelectedIngredients((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
+
+  const handleOrder = () => {
+    const selectedList = [];
+
+    calculatedData.forEach((recipe) => {
+      recipe.ingredients.forEach((ing) => {
+        if (selectedIngredients[ing.id]) {
+          selectedList.push({
+            recipeName: recipe.name,
+            ingredient: ing.name,
+            quantity: ing.quantity,
+            notes: ing.notes,
+          });
+        }
+      });
+    });
+
+    console.log("🛒 Selected Ingredients to Order:", selectedList);
+
+    // You can trigger API call or navigate to next screen here
+  };
+
   if (loading) {
     return (
       <View style={[styles.centered, isDarkMode && styles.darkContainer]}>
@@ -67,46 +99,61 @@ export default function CalculatedIngredientsScreen({ route }) {
   }
 
   return (
-    <ScrollView style={[styles.container, isDarkMode && styles.darkContainer]}>
-      <Text style={[styles.header, isDarkMode && styles.darkText]}>
-        Calculated Ingredients 🧮
-      </Text>
-
-      {calculatedData.length === 0 ? (
-        <Text style={[styles.emptyText, isDarkMode && styles.darkText]}>
-          No recipes could be processed.
+    <View style={[styles.fullScreen, isDarkMode && styles.darkContainer]}>
+      <ScrollView style={styles.container}>
+        <Text style={[styles.header, isDarkMode && styles.darkText]}>
+          Calculated Ingredients 🧮
         </Text>
-      ) : (
-        calculatedData.map((recipe, index) => (
-          <View
-            key={index}
-            style={[styles.recipeCard, isDarkMode && styles.darkCard]}
-          >
-            <Text style={[styles.recipeName, isDarkMode && styles.darkText]}>
-              {recipe.name}
-            </Text>
-            <Text style={[styles.recipeDesc, isDarkMode && styles.darkText]}>
-              {recipe.description}
-            </Text>
 
-            {recipe.ingredients.map((ing, idx) => (
-              <View key={idx} style={styles.ingredientRow}>
-                <Text
-                  style={[styles.ingredientText, isDarkMode && styles.darkText]}
-                >
-                  • {ing.name}: {ing.quantity}
-                  {ing.notes ? ` (${ing.notes})` : ""}
-                </Text>
-              </View>
-            ))}
-          </View>
-        ))
-      )}
-    </ScrollView>
+        {calculatedData.length === 0 ? (
+          <Text style={[styles.emptyText, isDarkMode && styles.darkText]}>
+            No recipes could be processed.
+          </Text>
+        ) : (
+          calculatedData.map((recipe, index) => (
+            <View
+              key={index}
+              style={[styles.recipeCard, isDarkMode && styles.darkCard]}
+            >
+              <Text style={[styles.recipeName, isDarkMode && styles.darkText]}>
+                {recipe.name}
+              </Text>
+              <Text style={[styles.recipeDesc, isDarkMode && styles.darkText]}>
+                {recipe.description}
+              </Text>
+
+              {recipe.ingredients.map((ing, idx) => (
+                <View key={ing.id} style={styles.ingredientRow}>
+                  <Checkbox
+                    status={selectedIngredients[ing.id] ? "checked" : "unchecked"}
+                    onPress={() => toggleIngredient(ing.id)}
+                    color="#007bff"
+                    uncheckedColor={isDarkMode ? "#bbb" : "#666"}
+                  />
+                  <Text
+                    style={[styles.ingredientText, isDarkMode && styles.darkText]}
+                  >
+                    {ing.name}: {ing.quantity}
+                    {ing.notes ? ` (${ing.notes})` : ""}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          ))
+        )}
+      </ScrollView>
+
+      <TouchableOpacity style={styles.orderButton} onPress={handleOrder}>
+        <Text style={styles.orderButtonText}>ORDER</Text>
+      </TouchableOpacity>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  fullScreen: {
+    flex: 1,
+  },
   container: {
     paddingTop: 50,
     paddingHorizontal: 16,
@@ -153,10 +200,13 @@ const styles = StyleSheet.create({
     color: "#666",
   },
   ingredientRow: {
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 6,
   },
   ingredientText: {
     fontSize: 15,
+    flexShrink: 1,
   },
   centered: {
     flex: 1,
@@ -167,5 +217,16 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontSize: 16,
     color: "#555",
+  },
+  orderButton: {
+    backgroundColor: "#007bff",
+    padding: 15,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  orderButtonText: {
+    color: "white",
+    fontSize: 18,
+    fontWeight: "bold",
   },
 });

@@ -6,6 +6,7 @@ import {
   FlatList,
   ActivityIndicator,
   TouchableOpacity,
+  SafeAreaView,
 } from "react-native";
 import { useTheme } from "../context/ThemeContext";
 import { getShoppingList, removeFromShoppingList } from "../services/bookmarkService";
@@ -86,7 +87,6 @@ export default function ShoppingListScreen({ navigation }) {
       return;
     }
 
-    // Build payload: recipeId → { adults, kids }
     const payload = selectedRecipeIds.map((id) => ({
       recipeId: id,
       adults: selectedAdults[id] ?? 0,
@@ -188,7 +188,7 @@ export default function ShoppingListScreen({ navigation }) {
 
   return (
     <Provider>
-      <View style={[styles.container, isDarkMode && styles.darkContainer]}>
+      <SafeAreaView style={[styles.container, isDarkMode && styles.darkContainer]}>
         <Text style={[styles.header, isDarkMode && styles.darkText]}>Shopping List 🛒</Text>
 
         {loading ? (
@@ -203,20 +203,19 @@ export default function ShoppingListScreen({ navigation }) {
               data={shoppingList}
               keyExtractor={(item) => item._id}
               renderItem={renderItem}
-              contentContainerStyle={{ paddingBottom: 20 }}
+              contentContainerStyle={{ paddingBottom: 140 }}
             />
-
-            {/* ✅ Green "Calculate" Button */}
-            <TouchableOpacity style={styles.calculateButton} onPress={handleCalculateIngredients}>
-              <Text style={styles.buttonText}>Calculate Ingredients</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.removeButton} onPress={handleRemoveSelected}>
-              <Text style={styles.buttonText}>Remove Selected</Text>
-            </TouchableOpacity>
+            <View style={styles.footerButtonsFixed}>
+              <TouchableOpacity style={styles.calculateButton} onPress={handleCalculateIngredients}>
+                <Text style={styles.buttonText}>Calculate Ingredients</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.removeButton} onPress={handleRemoveSelected}>
+                <Text style={styles.buttonText}>Remove Selected</Text>
+              </TouchableOpacity>
+            </View>
           </>
         )}
-      </View>
+      </SafeAreaView>
     </Provider>
   );
 }
@@ -282,14 +281,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#ff4d4d",
     padding: 15,
     borderRadius: 10,
-    marginVertical: 10,
+    marginVertical: 6,
     alignItems: "center",
   },
   calculateButton: {
     backgroundColor: "#28a745",
     padding: 15,
     borderRadius: 10,
-    marginBottom: 10,
+    marginBottom: 6,
     alignItems: "center",
   },
   buttonText: {
@@ -310,5 +309,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "500",
     color: "#333",
+  },
+  footerButtonsFixed: {
+    position: "absolute",
+    bottom: 10,
+    left: 0,
+    right: 0,
+    padding: 16,
+    backgroundColor: "#f8f8f8",
+    borderTopWidth: 1,
+    borderTopColor: "#ccc",
   },
 });

@@ -93,4 +93,14 @@ const styles = StyleSheet.create({
     marginTop: 10, // ✅ Reduced space before welcome text
     alignSelf: "center",
   },
+  sidebar: {
+    position: "absolute",
+    right: 20,
+    bottom: 30, // <- increase this if it's being cut off
+    backgroundColor: "#3b82f6",
+    padding: 10,
+    borderRadius: 10,
+    // Add elevation or shadow if needed
+  },
+  
 });

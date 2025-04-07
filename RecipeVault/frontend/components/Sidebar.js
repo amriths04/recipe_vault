@@ -2,13 +2,15 @@ import React, { useState, useContext, useRef } from "react";
 import { View, TouchableOpacity, StyleSheet, TouchableWithoutFeedback } from "react-native";
 import { AuthContext } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
+import { useSafeAreaInsets } from "react-native-safe-area-context"; // ✅ Add Safe Area
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
 const FloatingMenu = ({ navigation }) => {
   const { logout } = useContext(AuthContext);
   const { isDarkMode, toggleTheme } = useTheme();
+  const insets = useSafeAreaInsets(); // ✅ Safe Area usage
   const [isVisible, setIsVisible] = useState(false);
-  const timeoutRef = useRef(null); // Store timeout reference
+  const timeoutRef = useRef(null);
 
   const togglePanel = () => {
     setIsVisible(true); // Show panel
@@ -26,8 +28,15 @@ const FloatingMenu = ({ navigation }) => {
 
   return (
     <TouchableWithoutFeedback onPress={closePanel}>
-      <View style={styles.container}>
-        {/* Floating Button (Three Dots or X) */}
+      <View
+        style={[
+          styles.container,
+          {
+            bottom: insets.bottom + 15, // ✅ Push up from bottom safe area
+            left: insets.left + 15,
+          },
+        ]}
+      >
         <TouchableOpacity style={styles.floatingButton} onPress={togglePanel}>
           <Ionicons name={isVisible ? "close" : "ellipsis-horizontal"} size={22} color="white" />
         </TouchableOpacity>
