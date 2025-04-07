@@ -1,5 +1,4 @@
-const API_URL = "http://192.168.71.126:5000/api";
-
+import { API_URL } from '../config.js';
 
 export const removeBookmarks = async (recipeIds, token) => {
   try {

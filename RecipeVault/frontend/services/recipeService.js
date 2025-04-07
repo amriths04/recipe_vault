@@ -1,8 +1,8 @@
-const API_URL = "http://192.168.71.126:5000/api/recipes";
+import { API_URL } from '../config.js';
 
 export const fetchRecipes = async () => {
   try {
-    const response = await fetch(`${API_URL}/`, {
+    const response = await fetch(`${API_URL}/recipes`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -25,7 +25,7 @@ export const fetchRecipes = async () => {
 
 export const fetchRecipeById = async (recipeId) => {
   try {
-    const response = await fetch(`${API_URL}/${recipeId}`, {
+    const response = await fetch(`${API_URL}/recipes/${recipeId}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -41,7 +41,7 @@ export const fetchRecipeById = async (recipeId) => {
 
 export const addRecipe = async (recipeData) => {
   try {
-    const response = await fetch(`${API_URL}/`, {
+    const response = await fetch(`${API_URL}/recipes/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -58,7 +58,7 @@ export const addRecipe = async (recipeData) => {
 
 export const updateRecipe = async (recipeId, updatedData) => {
   try {
-    const response = await fetch(`${API_URL}/${recipeId}`, {
+    const response = await fetch(`${API_URL}/recipes/${recipeId}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -75,7 +75,7 @@ export const updateRecipe = async (recipeId, updatedData) => {
 
 export const deleteRecipe = async (recipeId) => {
   try {
-    const response = await fetch(`${API_URL}/${recipeId}`, {
+    const response = await fetch(`${API_URL}/recipes/${recipeId}`, {
       method: "DELETE",
     });
 
@@ -88,7 +88,7 @@ export const deleteRecipe = async (recipeId) => {
 
 export const toggleBookmarkRecipe = async (recipeId, userId, token) => {
   try {
-    const response = await fetch(`${API_URL}/bookmark`, {
+    const response = await fetch(`${API_URL}/recipes/bookmark`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -110,7 +110,7 @@ export const toggleBookmarkRecipe = async (recipeId, userId, token) => {
 
 export const fetchBookmarkedRecipes = async (token) => {
   try {
-    const response = await fetch(`${API_URL}/bookmarked/meow`, {
+    const response = await fetch(`${API_URL}/recipes/bookmarked/meow`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -133,7 +133,7 @@ export const fetchBookmarkedRecipes = async (token) => {
 
 export const removeBookmarks = async (recipeIds, token) => {
   try {
-    const response = await fetch(`${API_URL}/bookmarks/unbookmark`, { // Bulk unbookmarking endpoint
+    const response = await fetch(`${API_URL}/recipes/bookmarks/unbookmark`, { // Bulk unbookmarking endpoint
       method: "DELETE", // Use DELETE method to remove bookmarks
       headers: {
         "Content-Type": "application/json",
