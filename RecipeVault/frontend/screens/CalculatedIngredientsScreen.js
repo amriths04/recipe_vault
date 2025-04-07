@@ -6,6 +6,7 @@ import {
   ScrollView,
   ActivityIndicator,
   TouchableOpacity,
+  SafeAreaView,
 } from "react-native";
 import { Checkbox } from "react-native-paper";
 import { useTheme } from "../context/ThemeContext";
@@ -18,7 +19,7 @@ export default function CalculatedIngredientsScreen({ route }) {
   const { token } = useContext(AuthContext);
   const [loading, setLoading] = useState(true);
   const [calculatedData, setCalculatedData] = useState([]);
-  const [selectedIngredients, setSelectedIngredients] = useState({}); // store checked state
+  const [selectedIngredients, setSelectedIngredients] = useState({});
 
   useEffect(() => {
     const fetchData = async () => {
@@ -59,10 +60,10 @@ export default function CalculatedIngredientsScreen({ route }) {
     fetchData();
   }, [selectedRecipes, token]);
 
-  const toggleIngredient = (id) => {
+  const toggleIngredient = (key) => {
     setSelectedIngredients((prev) => ({
       ...prev,
-      [id]: !prev[id],
+      [key]: !prev[key],
     }));
   };
 
@@ -70,8 +71,9 @@ export default function CalculatedIngredientsScreen({ route }) {
     const selectedList = [];
 
     calculatedData.forEach((recipe) => {
-      recipe.ingredients.forEach((ing) => {
-        if (selectedIngredients[ing.id]) {
+      recipe.ingredients.forEach((ing, idx) => {
+        const key = `${recipe.recipeId}-${ing.name}-${idx}`;
+        if (selectedIngredients[key]) {
           selectedList.push({
             recipeName: recipe.name,
             ingredient: ing.name,
@@ -83,7 +85,6 @@ export default function CalculatedIngredientsScreen({ route }) {
     });
 
     console.log("🛒 Selected Ingredients to Order:", selectedList);
-
     // You can trigger API call or navigate to next screen here
   };
 
@@ -99,54 +100,68 @@ export default function CalculatedIngredientsScreen({ route }) {
   }
 
   return (
-    <View style={[styles.fullScreen, isDarkMode && styles.darkContainer]}>
-      <ScrollView style={styles.container}>
-        <Text style={[styles.header, isDarkMode && styles.darkText]}>
-          Calculated Ingredients 🧮
-        </Text>
-
-        {calculatedData.length === 0 ? (
-          <Text style={[styles.emptyText, isDarkMode && styles.darkText]}>
-            No recipes could be processed.
+    <SafeAreaView style={[styles.fullScreen, isDarkMode && styles.darkContainer]}>
+      <View style={styles.contentWrapper}>
+        <ScrollView
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: 100 }]}
+        >
+          <Text style={[styles.header, isDarkMode && styles.darkText]}>
+            Calculated Ingredients 🧮
           </Text>
-        ) : (
-          calculatedData.map((recipe, index) => (
-            <View
-              key={index}
-              style={[styles.recipeCard, isDarkMode && styles.darkCard]}
-            >
-              <Text style={[styles.recipeName, isDarkMode && styles.darkText]}>
-                {recipe.name}
-              </Text>
-              <Text style={[styles.recipeDesc, isDarkMode && styles.darkText]}>
-                {recipe.description}
-              </Text>
 
-              {recipe.ingredients.map((ing, idx) => (
-                <View key={ing.id} style={styles.ingredientRow}>
-                  <Checkbox
-                    status={selectedIngredients[ing.id] ? "checked" : "unchecked"}
-                    onPress={() => toggleIngredient(ing.id)}
-                    color="#007bff"
-                    uncheckedColor={isDarkMode ? "#bbb" : "#666"}
-                  />
-                  <Text
-                    style={[styles.ingredientText, isDarkMode && styles.darkText]}
-                  >
-                    {ing.name}: {ing.quantity}
-                    {ing.notes ? ` (${ing.notes})` : ""}
-                  </Text>
-                </View>
-              ))}
-            </View>
-          ))
-        )}
-      </ScrollView>
+          {calculatedData.length === 0 ? (
+            <Text style={[styles.emptyText, isDarkMode && styles.darkText]}>
+              No recipes could be processed.
+            </Text>
+          ) : (
+            calculatedData.map((recipe, index) => (
+              <View
+                key={index}
+                style={[styles.recipeCard, isDarkMode && styles.darkCard]}
+              >
+                <Text
+                  style={[styles.recipeName, isDarkMode && styles.darkText]}
+                >
+                  {recipe.name}
+                </Text>
+                <Text style={[styles.recipeDesc, isDarkMode && styles.darkText]}>
+                  {recipe.description}
+                </Text>
 
-      <TouchableOpacity style={styles.orderButton} onPress={handleOrder}>
-        <Text style={styles.orderButtonText}>ORDER</Text>
-      </TouchableOpacity>
-    </View>
+                {recipe.ingredients.map((ing, idx) => {
+                  const key = `${recipe.recipeId}-${ing.name}-${idx}`;
+                  return (
+                    <View key={key} style={styles.ingredientRow}>
+                      <Checkbox
+                        status={selectedIngredients[key] ? "checked" : "unchecked"}
+                        onPress={() => toggleIngredient(key)}
+                        color="#007bff"
+                        uncheckedColor={isDarkMode ? "#bbb" : "#666"}
+                      />
+                      <Text
+                        style={[
+                          styles.ingredientText,
+                          isDarkMode && styles.darkText,
+                        ]}
+                      >
+                        {ing.name}: {ing.quantity}
+                        {ing.notes ? ` (${ing.notes})` : ""}
+                      </Text>
+                    </View>
+                  );
+                })}
+              </View>
+            ))
+          )}
+        </ScrollView>
+
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity style={styles.orderButton} onPress={handleOrder}>
+            <Text style={styles.orderButtonText}>ORDER</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </SafeAreaView>
   );
 }
 
@@ -154,10 +169,13 @@ const styles = StyleSheet.create({
   fullScreen: {
     flex: 1,
   },
-  container: {
+  contentWrapper: {
+    flex: 1,
+    position: "relative",
+  },
+  scrollContent: {
     paddingTop: 50,
     paddingHorizontal: 16,
-    backgroundColor: "#f9f9f9",
   },
   darkContainer: {
     backgroundColor: "#121212",
@@ -218,15 +236,30 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#555",
   },
+buttonContainer: {
+  position: "absolute",
+  bottom: 30,
+  left: 20,
+  right: 20,
+  backgroundColor: "transparent",
+},
   orderButton: {
     backgroundColor: "#007bff",
-    padding: 15,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
   },
   orderButtonText: {
-    color: "white",
-    fontSize: 18,
-    fontWeight: "bold",
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+    letterSpacing: 1,
   },
 });
