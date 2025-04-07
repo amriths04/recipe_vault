@@ -10,7 +10,7 @@ import BookmarkedRecipesScreen from "../screens/BookmarkedRecipesScreen";
 import ProfileScreen from "../screens/ProfileScreen";
 import ExploreRecipesScreen from "../screens/ExploreRecipesScreen";
 import RecipeDetailsScreen from "../screens/RecipeDetailsScreen";
-
+import CalculatedIngredientsScreen from "../screens/CalculatedIngredientsScreen";
 const Stack = createStackNavigator();
 
 export default function AppNavigator() {
@@ -34,6 +34,7 @@ export default function AppNavigator() {
       <Stack.Screen name="Profile" component={ProfileScreen} />
       <Stack.Screen name="ExploreRecipes" component={ExploreRecipesScreen} />
       <Stack.Screen name="RecipeDetails" component={RecipeDetailsScreen} />
+      <Stack.Screen name="CalculatedIngredients" component={CalculatedIngredientsScreen} />
     </Stack.Navigator>
   );
 }

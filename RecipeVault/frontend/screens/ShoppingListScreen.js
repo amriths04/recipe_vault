@@ -10,7 +10,7 @@ import {
 import { useTheme } from "../context/ThemeContext";
 import { getShoppingList, removeFromShoppingList } from "../services/bookmarkService";
 import { AuthContext } from "../context/AuthContext";
-import { Checkbox, Button, Menu, Provider } from "react-native-paper"; // 📦 ADDED
+import { Checkbox, Button, Menu, Provider } from "react-native-paper";
 import { useFocusEffect } from "@react-navigation/native";
 
 export default function ShoppingListScreen({ navigation }) {
@@ -79,7 +79,23 @@ export default function ShoppingListScreen({ navigation }) {
     }
   };
 
-  // ✅ Dropdown Menus for Adults/Kids
+  const handleCalculateIngredients = () => {
+    const selectedRecipeIds = Object.keys(selectedItems).filter((id) => selectedItems[id]);
+    if (selectedRecipeIds.length === 0) {
+      alert("Please select at least one recipe to calculate!");
+      return;
+    }
+
+    // Build payload: recipeId → { adults, kids }
+    const payload = selectedRecipeIds.map((id) => ({
+      recipeId: id,
+      adults: selectedAdults[id] ?? 0,
+      kids: selectedKids[id] ?? 0,
+    }));
+
+    navigation.navigate("CalculatedIngredients", { selectedRecipes: payload });
+  };
+
   const renderDropdowns = (itemId) => (
     <View style={styles.dropdownRow}>
       <View style={styles.dropdownBox}>
@@ -166,7 +182,6 @@ export default function ShoppingListScreen({ navigation }) {
         </View>
       </View>
 
-      {/* 👇 Add Dropdowns for Adults and Kids */}
       {renderDropdowns(item._id)}
     </TouchableOpacity>
   );
@@ -190,6 +205,12 @@ export default function ShoppingListScreen({ navigation }) {
               renderItem={renderItem}
               contentContainerStyle={{ paddingBottom: 20 }}
             />
+
+            {/* ✅ Green "Calculate" Button */}
+            <TouchableOpacity style={styles.calculateButton} onPress={handleCalculateIngredients}>
+              <Text style={styles.buttonText}>Calculate Ingredients</Text>
+            </TouchableOpacity>
+
             <TouchableOpacity style={styles.removeButton} onPress={handleRemoveSelected}>
               <Text style={styles.buttonText}>Remove Selected</Text>
             </TouchableOpacity>
@@ -262,6 +283,13 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 10,
     marginVertical: 10,
+    alignItems: "center",
+  },
+  calculateButton: {
+    backgroundColor: "#28a745",
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 10,
     alignItems: "center",
   },
   buttonText: {
