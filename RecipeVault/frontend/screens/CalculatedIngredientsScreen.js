@@ -12,14 +12,18 @@ import { Checkbox } from "react-native-paper";
 import { useTheme } from "../context/ThemeContext";
 import { AuthContext } from "../context/AuthContext";
 import { fetchRecipeById } from "../services/recipeService";
+import OrderModal from "../components/OrderModal";
 
 export default function CalculatedIngredientsScreen({ route }) {
   const { selectedRecipes } = route.params;
   const { isDarkMode } = useTheme();
   const { token } = useContext(AuthContext);
+
   const [loading, setLoading] = useState(true);
   const [calculatedData, setCalculatedData] = useState([]);
   const [selectedIngredients, setSelectedIngredients] = useState({});
+  const [modalVisible, setModalVisible] = useState(false);
+  const [finalSelectedList, setFinalSelectedList] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -76,16 +80,15 @@ export default function CalculatedIngredientsScreen({ route }) {
         if (selectedIngredients[key]) {
           selectedList.push({
             recipeName: recipe.name,
-            ingredient: ing.name,
+            name: ing.name,
             quantity: ing.quantity,
-            notes: ing.notes,
           });
         }
       });
     });
 
-    console.log("🛒 Selected Ingredients to Order:", selectedList);
-    // You can trigger API call or navigate to next screen here
+    setFinalSelectedList(selectedList);
+    setModalVisible(true);
   };
 
   if (loading) {
@@ -161,6 +164,13 @@ export default function CalculatedIngredientsScreen({ route }) {
           </TouchableOpacity>
         </View>
       </View>
+
+      <OrderModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        selectedList={finalSelectedList}
+        isDarkMode={isDarkMode}
+      />
     </SafeAreaView>
   );
 }
@@ -236,13 +246,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#555",
   },
-buttonContainer: {
-  position: "absolute",
-  bottom: 30,
-  left: 20,
-  right: 20,
-  backgroundColor: "transparent",
-},
+  buttonContainer: {
+    position: "absolute",
+    bottom: 30,
+    left: 20,
+    right: 20,
+    backgroundColor: "transparent",
+  },
   orderButton: {
     backgroundColor: "#007bff",
     paddingVertical: 12,
