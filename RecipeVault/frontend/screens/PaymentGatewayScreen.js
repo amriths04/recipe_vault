@@ -1,5 +1,19 @@
 import React, { useState } from "react";
-import {View,Text,StyleSheet,ScrollView,TouchableOpacity,TextInput,KeyboardAvoidingView,Platform,TouchableWithoutFeedback,Keyboard,} from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableWithoutFeedback,
+  Keyboard,
+  Image,
+  Modal,
+  Pressable,
+} from "react-native";
 import { RadioButton } from "react-native-paper";
 import { useNavigation, useRoute } from "@react-navigation/native";
 
@@ -29,6 +43,8 @@ export default function PaymentGatewayScreen() {
     expiry: "",
     cvv: "",
   });
+
+  const [showQRModal, setShowQRModal] = useState(false);
 
   const deliveryFee = 20;
   const codFee = selectedMethod === "cod" ? 15 : 0;
@@ -82,7 +98,10 @@ export default function PaymentGatewayScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>UPI</Text>
             <RadioButton.Group
-              onValueChange={(value) => setSelectedMethod(value)}
+              onValueChange={(value) => {
+                setSelectedMethod(value);
+                if (value === "upi") setShowQRModal(true);
+              }}
               value={selectedMethod}
             >
               <RadioButton.Item
@@ -91,6 +110,39 @@ export default function PaymentGatewayScreen() {
               />
             </RadioButton.Group>
           </View>
+
+          {/* QR Modal */}
+          <Modal
+  animationType="fade"
+  transparent={true}
+  visible={showQRModal}
+  onRequestClose={() => setShowQRModal(false)}
+>
+  <Pressable style={styles.modalOverlay} onPress={() => setShowQRModal(false)}>
+    <View style={styles.modalContainer}>
+      <TouchableOpacity
+        style={styles.closeButton}
+        onPress={() => setShowQRModal(false)}
+      >
+        <Text style={{color:"white"}}></Text>
+      </TouchableOpacity>
+
+      <Image
+  source={require("../assets/QR.png")}
+  style={{
+    width: 350,
+    height: 400,
+    borderRadius: 10,
+    resizeMode: "cover",
+    overflow: "hidden",
+  }}
+/>
+
+      <Text style={{ marginTop: 8, color: "white" }}>Scan to Pay via UPI</Text>
+    </View>
+  </Pressable>
+</Modal>
+
 
           {/* Cards Section */}
           <View style={styles.section}>
@@ -360,5 +412,20 @@ const styles = StyleSheet.create({
   backText: {
     color: "white",
     fontWeight: "bold",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.3)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContainer: {
+    backgroundColor: "black",
+    padding: 1,
+    borderRadius: 10,
+    alignItems: "center",
+    width: "90%", // more responsive
+  maxWidth: 400,
+
   },
 });
