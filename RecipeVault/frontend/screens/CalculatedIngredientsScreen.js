@@ -176,10 +176,13 @@ export default function CalculatedIngredientsScreen({ route }) {
 
       <OrderModal
   visible={modalVisible}
-  onClose={() => setModalVisible(false)}
+  onClose={() => {
+    setModalVisible(false);
+    setPriceData(null); // ⛔ Clear price data if user cancels
+  }}
   selectedList={finalSelectedList}
   isDarkMode={isDarkMode}
-  priceDetails={priceData} // ✅ Corrected
+  priceDetails={priceData}
 />
 
     </SafeAreaView>

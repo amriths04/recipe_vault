@@ -7,6 +7,7 @@ import {
   ScrollView,
   TouchableOpacity,
 } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 
 export default function OrderModal({
   visible,
@@ -16,6 +17,8 @@ export default function OrderModal({
   priceDetails,
   loadingPrice,
 }) {
+  const navigation = useNavigation();
+
   const groupedIngredients = selectedList.reduce((acc, item) => {
     if (!acc[item.recipeName]) {
       acc[item.recipeName] = [];
@@ -133,7 +136,15 @@ export default function OrderModal({
               <Text style={styles.buttonText}>Cancel</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={[styles.button, styles.payButton]}>
+            <TouchableOpacity
+              onPress={() => {
+                onClose();
+                navigation.navigate("PaymentGateway", {
+                  price: priceDetails?.totalPrice || 0,
+                });
+              }}
+              style={[styles.button, styles.payButton]}
+            >
               <Text style={styles.buttonText}>PAY</Text>
             </TouchableOpacity>
           </View>
