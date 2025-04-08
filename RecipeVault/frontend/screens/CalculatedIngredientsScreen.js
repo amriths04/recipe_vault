@@ -1,13 +1,5 @@
 import React, { useEffect, useState, useContext } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  ActivityIndicator,
-  TouchableOpacity,
-  SafeAreaView,
-} from "react-native";
+import {View,Text,StyleSheet,ScrollView,ActivityIndicator,TouchableOpacity,SafeAreaView,} from "react-native";
 import { Checkbox } from "react-native-paper";
 import { useTheme } from "../context/ThemeContext";
 import { AuthContext } from "../context/AuthContext";
@@ -58,6 +50,14 @@ export default function CalculatedIngredientsScreen({ route }) {
       }
 
       setCalculatedData(results);
+      const defaultSelected = {};
+      results.forEach((recipe) => {
+        recipe.ingredients.forEach((ing, idx) => {
+          const key = `${recipe.recipeId}-${ing.name}-${idx}`;
+          defaultSelected[key] = true;
+        });
+      });
+      setSelectedIngredients(defaultSelected);
       setLoading(false);
     };
 

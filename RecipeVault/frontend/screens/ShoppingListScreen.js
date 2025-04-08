@@ -1,19 +1,11 @@
-// ShoppingListScreen.js
 import React, { useState, useContext, useCallback } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  ActivityIndicator,
-  TouchableOpacity,
-  SafeAreaView,
-} from "react-native";
+import {View,Text,StyleSheet,FlatList,ActivityIndicator,TouchableOpacity,SafeAreaView,} from "react-native";
 import { useTheme } from "../context/ThemeContext";
-import { getShoppingList, removeFromShoppingList } from "../services/bookmarkService";
+import {getShoppingList,removeFromShoppingList,} from "../services/bookmarkService";
 import { AuthContext } from "../context/AuthContext";
-import { Checkbox, Button, Menu, Provider } from "react-native-paper";
 import { useFocusEffect } from "@react-navigation/native";
+import { Provider } from "react-native-paper";
+import ShoppingListItem from "../components/ShoppingListItem";
 
 export default function ShoppingListScreen({ navigation }) {
   const { isDarkMode } = useTheme();
@@ -60,7 +52,9 @@ export default function ShoppingListScreen({ navigation }) {
   };
 
   const handleRemoveSelected = async () => {
-    const selectedRecipeIds = Object.keys(selectedItems).filter((id) => selectedItems[id]);
+    const selectedRecipeIds = Object.keys(selectedItems).filter(
+      (id) => selectedItems[id]
+    );
 
     if (selectedRecipeIds.length === 0) {
       alert("Please select at least one recipe to remove!");
@@ -82,129 +76,61 @@ export default function ShoppingListScreen({ navigation }) {
   };
 
   const handleCalculateIngredients = () => {
-    const selectedRecipeIds = Object.keys(selectedItems).filter((id) => selectedItems[id]);
-  
+    const selectedRecipeIds = Object.keys(selectedItems).filter(
+      (id) => selectedItems[id]
+    );
+
     if (selectedRecipeIds.length === 0) {
       alert("Please select at least one recipe to calculate!");
       return;
     }
-  
-    // Check if any selected recipe has both adults and kids as 0
+
     const hasInvalidSelection = selectedRecipeIds.some((id) => {
       const adults = selectedAdults[id] ?? 0;
       const kids = selectedKids[id] ?? 0;
       return adults === 0 && kids === 0;
     });
-  
+
     if (hasInvalidSelection) {
       alert("Each selected recipe must have at least 1 adult or 1 kid.");
       return;
     }
-  
+
     const payload = selectedRecipeIds.map((id) => ({
       recipeId: id,
       adults: selectedAdults[id] ?? 0,
       kids: selectedKids[id] ?? 0,
     }));
-  
+
     navigation.navigate("CalculatedIngredients", { selectedRecipes: payload });
   };
-  
-
-  const renderDropdowns = (itemId) => (
-    <View style={styles.dropdownRow}>
-      <View style={styles.dropdownBox}>
-        <Text style={[styles.dropdownLabel, isDarkMode && styles.darkText]}>Adults:</Text>
-        <Menu
-          visible={menuVisible[`adult-${itemId}`]}
-          onDismiss={() =>
-            setMenuVisible((prev) => ({ ...prev, [`adult-${itemId}`]: false }))
-          }
-          anchor={
-            <Button
-              mode="outlined"
-              onPress={() =>
-                setMenuVisible((prev) => ({ ...prev, [`adult-${itemId}`]: true }))
-              }
-            >
-              {selectedAdults[itemId] ?? 0}
-            </Button>
-          }
-        >
-          {adultOptions.map((num) => (
-            <Menu.Item
-              key={num}
-              onPress={() => {
-                setSelectedAdults((prev) => ({ ...prev, [itemId]: num }));
-                setMenuVisible((prev) => ({ ...prev, [`adult-${itemId}`]: false }));
-              }}
-              title={`${num}`}
-            />
-          ))}
-        </Menu>
-      </View>
-
-      <View style={styles.dropdownBox}>
-        <Text style={[styles.dropdownLabel, isDarkMode && styles.darkText]}>Kids:</Text>
-        <Menu
-          visible={menuVisible[`kid-${itemId}`]}
-          onDismiss={() =>
-            setMenuVisible((prev) => ({ ...prev, [`kid-${itemId}`]: false }))
-          }
-          anchor={
-            <Button
-              mode="outlined"
-              onPress={() =>
-                setMenuVisible((prev) => ({ ...prev, [`kid-${itemId}`]: true }))
-              }
-            >
-              {selectedKids[itemId] ?? 0}
-            </Button>
-          }
-        >
-          {kidOptions.map((num) => (
-            <Menu.Item
-              key={num}
-              onPress={() => {
-                setSelectedKids((prev) => ({ ...prev, [itemId]: num }));
-                setMenuVisible((prev) => ({ ...prev, [`kid-${itemId}`]: false }));
-              }}
-              title={`${num}`}
-            />
-          ))}
-        </Menu>
-      </View>
-    </View>
-  );
 
   const renderItem = ({ item }) => (
-    <TouchableOpacity
-      style={[styles.card, isDarkMode && styles.darkCard]}
-      onPress={() => navigation.navigate("RecipeDetails", { recipeId: item._id })}
-    >
-      <View style={styles.row}>
-        <Checkbox
-          status={selectedItems[item._id] ? "checked" : "unchecked"}
-          onPress={() => toggleSelection(item._id)}
-        />
-        <View style={styles.textContainer}>
-          <Text style={[styles.title, isDarkMode && styles.darkText]}>
-            {item.name || "Untitled Recipe"}
-          </Text>
-          <Text style={[styles.desc, isDarkMode && styles.darkText]}>
-            {item.description || "No description available"}
-          </Text>
-        </View>
-      </View>
-
-      {renderDropdowns(item._id)}
-    </TouchableOpacity>
+    <ShoppingListItem
+      item={item}
+      isDarkMode={isDarkMode}
+      selected={selectedItems[item._id]}
+      onToggleSelect={toggleSelection}
+      selectedAdults={selectedAdults}
+      selectedKids={selectedKids}
+      setSelectedAdults={setSelectedAdults}
+      setSelectedKids={setSelectedKids}
+      menuVisible={menuVisible}
+      setMenuVisible={setMenuVisible}
+      navigation={navigation}
+      adultOptions={adultOptions}
+      kidOptions={kidOptions}
+    />
   );
 
   return (
     <Provider>
-      <SafeAreaView style={[styles.container, isDarkMode && styles.darkContainer]}>
-        <Text style={[styles.header, isDarkMode && styles.darkText]}>Shopping List 🛒</Text>
+      <SafeAreaView
+        style={[styles.container, isDarkMode && styles.darkContainer]}
+      >
+        <Text style={[styles.header, isDarkMode && styles.darkText]}>
+          Shopping List 🛒
+        </Text>
 
         {loading ? (
           <ActivityIndicator size="large" color="#007bff" />
@@ -267,37 +193,6 @@ const styles = StyleSheet.create({
     marginTop: 40,
     color: "#555",
   },
-  card: {
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  darkCard: {
-    backgroundColor: "#1e1e1e",
-  },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  textContainer: {
-    flex: 1,
-    marginLeft: 10,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "black",
-  },
-  desc: {
-    fontSize: 14,
-    marginTop: 4,
-    color: "#555",
-  },
   removeButton: (isDarkMode) => ({
     backgroundColor: isDarkMode ? "#b00020" : "#ff4d4d",
     padding: 15,
@@ -316,20 +211,6 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 16,
     fontWeight: "bold",
-  },
-  dropdownRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 12,
-  },
-  dropdownBox: {
-    flex: 0.48,
-  },
-  dropdownLabel: {
-    marginBottom: 4,
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#333",
   },
   footerButtonsFixed: (isDarkMode) => ({
     position: "absolute",
