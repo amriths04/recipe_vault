@@ -4,6 +4,7 @@ import { Checkbox } from "react-native-paper";
 import { useTheme } from "../context/ThemeContext";
 import { AuthContext } from "../context/AuthContext";
 import { fetchRecipeById } from "../services/recipeService";
+import { calculateOrderPrice } from "../services/orderService"; // ✅ NEW IMPORT
 import OrderModal from "../components/OrderModal";
 
 export default function CalculatedIngredientsScreen({ route }) {
@@ -16,6 +17,7 @@ export default function CalculatedIngredientsScreen({ route }) {
   const [selectedIngredients, setSelectedIngredients] = useState({});
   const [modalVisible, setModalVisible] = useState(false);
   const [finalSelectedList, setFinalSelectedList] = useState([]);
+  const [priceData, setPriceData] = useState(null); // ✅ NEW STATE
 
   useEffect(() => {
     const fetchData = async () => {
@@ -71,7 +73,7 @@ export default function CalculatedIngredientsScreen({ route }) {
     }));
   };
 
-  const handleOrder = () => {
+  const handleOrder = async () => {
     const selectedList = [];
 
     calculatedData.forEach((recipe) => {
@@ -88,7 +90,14 @@ export default function CalculatedIngredientsScreen({ route }) {
     });
 
     setFinalSelectedList(selectedList);
-    setModalVisible(true);
+
+    try {
+      const response = await calculateOrderPrice(selectedList, token); // ✅ BACKEND CALL
+      setPriceData(response); // ✅ Save response (like totalPrice)
+      setModalVisible(true);
+    } catch (error) {
+      console.error("Price calculation failed:", error);
+    }
   };
 
   if (loading) {
@@ -166,11 +175,13 @@ export default function CalculatedIngredientsScreen({ route }) {
       </View>
 
       <OrderModal
-        visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-        selectedList={finalSelectedList}
-        isDarkMode={isDarkMode}
-      />
+  visible={modalVisible}
+  onClose={() => setModalVisible(false)}
+  selectedList={finalSelectedList}
+  isDarkMode={isDarkMode}
+  priceDetails={priceData} // ✅ Corrected
+/>
+
     </SafeAreaView>
   );
 }
