@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import {
   View,
   Text,
@@ -10,12 +10,13 @@ import {
   Platform,
   TouchableWithoutFeedback,
   Keyboard,
-  Image,
   Modal,
   Pressable,
+  Alert,
 } from "react-native";
 import { RadioButton } from "react-native-paper";
 import { useNavigation, useRoute } from "@react-navigation/native";
+import { AuthContext } from "../context/AuthContext";
 
 const promoCodes = new Map([
   ["SAVE50", 50],
@@ -27,8 +28,19 @@ const promoCodes = new Map([
 export default function PaymentGatewayScreen() {
   const navigation = useNavigation();
   const route = useRoute();
+  const { token } = useContext(AuthContext);
+  console.log(route.params);  // Log route params for debugging
 
-  const { price = 0 } = route.params || {};
+  const { calculatedIngredients, totalAmount, recipeIds } = route.params || {};
+
+  const orderData = {
+    ingredients: calculatedIngredients,  // Use it directly as it is
+    totalAmount: totalAmount,
+    recipeIds: recipeIds,
+    userId: "67a705115091710bf36fe8c4",  // Assuming userId is available from the context
+    deliveryAddress: "deliveryAddress" || '',  // Stubbed or passed delivery address
+  };
+  console.log("Order data: ", orderData);  // Log the order data for debugging
 
   const [selectedMethod, setSelectedMethod] = useState("");
   const [promoCode, setPromoCode] = useState("");
@@ -47,18 +59,66 @@ export default function PaymentGatewayScreen() {
   const [showQRModal, setShowQRModal] = useState(false);
 
   const deliveryFee = 20;
-  const codFee = selectedMethod === "cod" ? 15 : 0;
-  const subtotal = price;
+  const codFee = selectedMethod === "cod" ? 15 : 0;  // COD fee if selected
+  const subtotal = totalAmount;
   const total = subtotal + deliveryFee + codFee - discountAmount;
 
   const handleBack = () => {
     navigation.goBack();
   };
 
-  const handlePayNow = () => {
-    alert(`Proceeding to payment of ₹${total}...`);
+  const handlePayNow = async () => {
+    const { userId, ingredients, totalAmount, recipeIds, deliveryAddress } = orderData;
+  
+    // Ensure all required fields are present
+    if (!userId || !deliveryAddress || !ingredients || !totalAmount || !recipeIds) {
+      Alert.alert("Error", "Missing required fields in the order data.");
+      return;
+    }
+  
+    Alert.alert("Payment Successful", "Your payment was processed successfully.", [
+      {
+        text: "PAY DONE",
+        onPress: async () => {
+          try {
+            // Prepare the data to send to the backend
+            const orderPayload = {
+              userId,
+              deliveryAddress: deliveryAddress || "",  // Default to empty string if not provided
+              ingredients: ingredients,
+              totalPrice: totalAmount,
+              recipeIds: recipeIds,  // Ensure this is an array of valid recipe IDs
+            };
+  
+            const response = await fetch('http://192.168.0.170:5000/api/orders/orders', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(orderPayload),
+            });
+  
+            const result = await response.json();
+  
+            // Handle the response
+            if (response.ok) {
+              Alert.alert("Order Placed", "Your order has been placed successfully.");
+              navigation.navigate("Final");  // Navigate to the final screen if needed
+            } else {
+              Alert.alert("Error", result.message || "Failed to place order.");
+              console.log(result);  // Log the result to see more details
+            }
+          } catch (err) {
+            console.error("Order error:", err);
+            Alert.alert("Error", err.message || "Failed to place order.");
+          }
+        },
+      },
+    ]);
   };
+  
 
+  // Apply promo code logic
   const handleApplyPromo = () => {
     const code = promoCode.trim().toUpperCase();
 
@@ -78,6 +138,7 @@ export default function PaymentGatewayScreen() {
     }
   };
 
+  // Remove promo code logic
   const handleRemovePromo = () => {
     setDiscountAmount(0);
     setDiscountApplied(false);
@@ -86,15 +147,12 @@ export default function PaymentGatewayScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
           <Text style={styles.title}>Choose Payment Method 💳</Text>
 
-          {/* UPI Section */}
+          {/* UPI Payment Section */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>UPI</Text>
             <RadioButton.Group
@@ -104,53 +162,23 @@ export default function PaymentGatewayScreen() {
               }}
               value={selectedMethod}
             >
-              <RadioButton.Item
-                label="Pay by any UPI App (Google Pay, PhonePe, Paytm)"
-                value="upi"
-              />
+              <RadioButton.Item label="Pay by any UPI App (Google Pay, PhonePe, Paytm)" value="upi" />
             </RadioButton.Group>
           </View>
 
-          {/* QR Modal */}
-          <Modal
-  animationType="fade"
-  transparent={true}
-  visible={showQRModal}
-  onRequestClose={() => setShowQRModal(false)}
->
-  <Pressable style={styles.modalOverlay} onPress={() => setShowQRModal(false)}>
-    <View style={styles.modalContainer}>
-      <TouchableOpacity
-        style={styles.closeButton}
-        onPress={() => setShowQRModal(false)}
-      >
-        <Text style={{color:"white"}}></Text>
-      </TouchableOpacity>
+          {/* QR Modal for UPI */}
+          <Modal animationType="fade" transparent={true} visible={showQRModal} onRequestClose={() => setShowQRModal(false)}>
+            <Pressable style={styles.modalOverlay} onPress={() => setShowQRModal(false)}>
+              <View style={styles.modalContainer}>
+                <Text style={{ marginTop: 8, color: "white" }}>Scan to Pay via UPI</Text>
+              </View>
+            </Pressable>
+          </Modal>
 
-      <Image
-  source={require("../assets/QR.png")}
-  style={{
-    width: 350,
-    height: 400,
-    borderRadius: 10,
-    resizeMode: "cover",
-    overflow: "hidden",
-  }}
-/>
-
-      <Text style={{ marginTop: 8, color: "white" }}>Scan to Pay via UPI</Text>
-    </View>
-  </Pressable>
-</Modal>
-
-
-          {/* Cards Section */}
+          {/* Credit/Debit Card Payment */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Cards</Text>
-            <TouchableOpacity
-              style={styles.addCardButton}
-              onPress={() => setShowCardForm(!showCardForm)}
-            >
+            <TouchableOpacity style={styles.addCardButton} onPress={() => setShowCardForm(!showCardForm)}>
               <Text style={styles.addCardText}>
                 {showCardForm ? "Hide Card Form" : "+ Add a new credit or debit card"}
               </Text>
@@ -164,18 +192,14 @@ export default function PaymentGatewayScreen() {
                   keyboardType="numeric"
                   maxLength={16}
                   value={cardDetails.cardNumber}
-                  onChangeText={(text) =>
-                    setCardDetails({ ...cardDetails, cardNumber: text })
-                  }
+                  onChangeText={(text) => setCardDetails({ ...cardDetails, cardNumber: text })}
                 />
                 <View style={{ flexDirection: "row", gap: 10 }}>
                   <TextInput
                     placeholder="MM/YY"
                     style={[styles.input, { flex: 1 }]}
                     value={cardDetails.expiry}
-                    onChangeText={(text) =>
-                      setCardDetails({ ...cardDetails, expiry: text })
-                    }
+                    onChangeText={(text) => setCardDetails({ ...cardDetails, expiry: text })}
                   />
                   <TextInput
                     placeholder="CVV"
@@ -184,9 +208,7 @@ export default function PaymentGatewayScreen() {
                     keyboardType="numeric"
                     maxLength={3}
                     value={cardDetails.cvv}
-                    onChangeText={(text) =>
-                      setCardDetails({ ...cardDetails, cvv: text })
-                    }
+                    onChangeText={(text) => setCardDetails({ ...cardDetails, cvv: text })}
                   />
                 </View>
                 <TouchableOpacity
@@ -205,10 +227,7 @@ export default function PaymentGatewayScreen() {
           {/* Other Payment Methods */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>More Ways to Pay</Text>
-            <RadioButton.Group
-              onValueChange={(value) => setSelectedMethod(value)}
-              value={selectedMethod}
-            >
+            <RadioButton.Group onValueChange={setSelectedMethod} value={selectedMethod}>
               <RadioButton.Item label="EMI" value="emi" />
               <RadioButton.Item label="Net Banking" value="netbanking" />
               <RadioButton.Item
@@ -241,54 +260,24 @@ export default function PaymentGatewayScreen() {
             </View>
           )}
 
+          {/* Discount Info */}
           {discountApplied && (
-            <TouchableOpacity
-              style={styles.removePromoButton}
-              onPress={handleRemovePromo}
-            >
-              <Text style={styles.removePromoText}>✖ Remove Promo Code</Text>
-            </TouchableOpacity>
+            <View style={styles.discountInfo}>
+              <Text style={styles.discountText}>Applied Code: {appliedCode}</Text>
+              <Text style={styles.discountText}>Discount: ₹{discountAmount}</Text>
+              <TouchableOpacity style={styles.removePromoButton} onPress={handleRemovePromo}>
+                <Text style={styles.removePromoText}>Remove Promo</Text>
+              </TouchableOpacity>
+            </View>
           )}
 
-          {/* Price Summary */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Price Summary 🧾</Text>
-            <View style={styles.summaryRow}>
-              <Text>Subtotal</Text>
-              <Text>₹{subtotal}</Text>
-            </View>
-            <View style={styles.summaryRow}>
-              <Text>Income Tax</Text>
-              <Text>₹{deliveryFee}</Text>
-            </View>
-            {selectedMethod === "cod" && (
-              <View style={styles.summaryRow}>
-                <Text>Cash on Delivery Charge</Text>
-                <Text>₹{codFee}</Text>
-              </View>
-            )}
-            {discountApplied && (
-              <View style={styles.summaryRow}>
-                <Text style={{ color: "green" }}>
-                  Code Applied: {appliedCode}
-                </Text>
-                <Text style={{ color: "green" }}>-₹{discountAmount}</Text>
-              </View>
-            )}
-            <View style={styles.summaryRow}>
-              <Text style={styles.totalLabel}>Total Amount</Text>
-              <Text style={styles.totalLabel}>₹{total}</Text>
-            </View>
+          {/* Total Price and Payment Button */}
+          <View style={styles.summary}>
+            <Text style={styles.totalText}>Total: ₹{total}</Text>
+            <TouchableOpacity style={styles.paymentButton} onPress={handlePayNow}>
+              <Text style={styles.paymentButtonText}>Pay Now</Text>
+            </TouchableOpacity>
           </View>
-
-          {/* Buttons */}
-          <TouchableOpacity style={styles.payButton} onPress={handlePayNow}>
-            <Text style={styles.payText}>Pay Now</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-            <Text style={styles.backText}>← Go Back</Text>
-          </TouchableOpacity>
         </ScrollView>
       </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
@@ -297,135 +286,113 @@ export default function PaymentGatewayScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#f0f4f7",
     flex: 1,
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: 20,
   },
   title: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: "bold",
     marginBottom: 20,
-    marginTop: 16,
     textAlign: "center",
-    color: "#007bff",
   },
   section: {
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    padding: 16,
-    marginBottom: 15,
-    elevation: 2,
+    marginBottom: 20,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "600",
-    marginBottom: 8,
   },
   addCardButton: {
-    paddingVertical: 10,
+    backgroundColor: "#ddd",
+    padding: 10,
+    borderRadius: 8,
+    marginTop: 10,
   },
   addCardText: {
-    color: "#007bff",
-    fontWeight: "500",
+    textAlign: "center",
+    fontSize: 16,
   },
   cardForm: {
-    marginTop: 10,
+    marginTop: 20,
+  },
+  input: {
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 10,
   },
   saveCardButton: {
-    marginTop: 10,
-    backgroundColor: "#28a745",
-    paddingVertical: 12,
+    backgroundColor: "#4CAF50",
+    padding: 12,
     borderRadius: 8,
-    alignItems: "center",
   },
   saveCardButtonText: {
     color: "white",
     fontWeight: "bold",
+    textAlign: "center",
   },
   promoToggle: {
+    color: "#007BFF",
+    fontWeight: "600",
     textAlign: "center",
-    marginTop: 10,
-    color: "#007bff",
-    fontWeight: "bold",
   },
   promoContainer: {
-    flexDirection: "row",
     marginTop: 10,
-    marginBottom: 10,
-    alignItems: "center",
-  },
-  input: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    padding: 10,
-    backgroundColor: "#fff",
   },
   applyButton: {
-    marginLeft: 10,
-    backgroundColor: "#007bff",
-    paddingVertical: 10,
-    paddingHorizontal: 16,
+    backgroundColor: "#28A745",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    marginTop: 10,
     borderRadius: 8,
   },
   applyButtonText: {
     color: "white",
+    textAlign: "center",
+    fontWeight: "bold",
+  },
+  discountInfo: {
+    backgroundColor: "#f0f0f0",
+    padding: 15,
+    borderRadius: 8,
+    marginTop: 15,
+  },
+  discountText: {
+    fontSize: 16,
     fontWeight: "bold",
   },
   removePromoButton: {
-    alignItems: "center",
-    marginBottom: 10,
+    backgroundColor: "#DC3545",
+    padding: 8,
+    borderRadius: 8,
+    marginTop: 10,
   },
   removePromoText: {
-    color: "red",
-    fontWeight: "bold",
-  },
-  summaryRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginVertical: 5,
-  },
-  totalLabel: {
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-  payButton: {
-    backgroundColor: "#ffcc00",
-    paddingVertical: 15,
-    borderRadius: 8,
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  payText: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#000",
-  },
-  backButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    backgroundColor: "#007bff",
-    alignSelf: "center",
-  },
-  backText: {
     color: "white",
+    textAlign: "center",
     fontWeight: "bold",
   },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.3)",
-    justifyContent: "center",
-    alignItems: "center",
+  summary: {
+    backgroundColor: "#f7f7f7",
+    padding: 15,
+    borderRadius: 8,
+    marginTop: 20,
   },
-  modalContainer: {
-    backgroundColor: "black",
-    padding: 1,
-    borderRadius: 10,
-    alignItems: "center",
-    width: "90%", // more responsive
-  maxWidth: 400,
-
+  totalText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  paymentButton: {
+    backgroundColor: "#28A745",
+    paddingVertical: 12,
+    marginTop: 20,
+    borderRadius: 8,
+  },
+  paymentButtonText: {
+    color: "white",
+    textAlign: "center",
+    fontWeight: "bold",
   },
 });

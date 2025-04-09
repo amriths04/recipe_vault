@@ -12,6 +12,7 @@ import ExploreRecipesScreen from "../screens/ExploreRecipesScreen";
 import RecipeDetailsScreen from "../screens/RecipeDetailsScreen";
 import CalculatedIngredientsScreen from "../screens/CalculatedIngredientsScreen";
 import PaymentGatewayScreen from "../screens/PaymentGatewayScreen";
+import FinalScreen from '../screens/FinalScreen';
 const Stack = createStackNavigator();
 
 export default function AppNavigator() {
@@ -37,6 +38,7 @@ export default function AppNavigator() {
       <Stack.Screen name="RecipeDetails" component={RecipeDetailsScreen} />
       <Stack.Screen name="CalculatedIngredients" component={CalculatedIngredientsScreen} />
       <Stack.Screen name="PaymentGateway" component={PaymentGatewayScreen} />
+      <Stack.Screen name="Final" component={FinalScreen} />
     </Stack.Navigator>
   );
 }

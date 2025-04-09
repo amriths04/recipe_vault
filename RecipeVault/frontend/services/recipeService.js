@@ -162,3 +162,26 @@ export const removeBookmarks = async (recipeIds, token) => {
     return { error: "Something went wrong!" };
   }
 };
+
+export const fetchRecipeIdsByNames = async (names) => {
+  try {
+    const response = await fetch(`${API_URL}/recipes/ids`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ names }),
+    });
+    const contentType = response.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      const textResponse = await response.text();
+      console.error("🔴 Non-JSON Response:", textResponse);
+      return { error: "Unexpected server response" };
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("🔴 Fetch Recipe IDs by Names Error:", error);
+    return { error: "Something went wrong!" };
+  }
+};

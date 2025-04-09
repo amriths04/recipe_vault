@@ -1,110 +1,45 @@
-import mongoose from "mongoose";
-import { ApiError } from "../utils/ApiError.js";
-import { User } from "../models/userModel.js";
 import Order from "../models/orderModel.js";
-import Recipe from "../models/recipeModel.js";
 
+// Create an order
 export const createOrder = async (req, res) => {
   try {
-    const userId = req.user._id;
-    const { recipeIds, deliveryAddress, items, totalPrice } = req.body;
+    const { userId, deliveryAddress, ingredients, totalPrice, recipeIds } = req.body;
 
-    // ✅ Input validation
-    if (!recipeIds || !Array.isArray(recipeIds) || recipeIds.length === 0) {
-      throw new ApiError(400, "No recipe IDs provided");
+    if (!userId || !deliveryAddress || !ingredients || !totalPrice || !recipeIds) {
+      return res.status(400).json({ message: "Missing required fields" });
     }
 
-    if (!deliveryAddress || typeof deliveryAddress !== "string") {
-      throw new ApiError(400, "Delivery address is required");
-    }
-
-    if (!items || !Array.isArray(items) || items.length === 0) {
-      throw new ApiError(400, "Order items are required");
-    }
-
-    if (typeof totalPrice !== "number" || isNaN(totalPrice)) {
-      throw new ApiError(400, "Invalid or missing total price");
-    }
-
-    const user = await User.findById(userId);
-    if (!user) throw new ApiError(404, "User not found");
-
-    // ✅ Strictly ensure ALL recipeIds are present in shopping list
-    const shoppingListIds = user.shoppingList.map((id) => id.toString());
-    const missingIds = recipeIds.filter(
-      (id) => !shoppingListIds.includes(id.toString())
-    );
-
-    if (missingIds.length > 0) {
-      throw new ApiError(
-        400,
-        `The following recipes are not in your shopping list: ${missingIds.join(", ")}`
-      );
-    }
-
-    // ✅ Validate items and their ingredients
-    const validatedItems = items.map((item) => {
-      const { recipe, name, price, ingredients } = item;
-
-      if (!recipe || !name || typeof price !== "number") {
-        throw new ApiError(400, "Invalid order item format");
-      }
-
-      if (
-        !ingredients ||
-        !Array.isArray(ingredients) ||
-        ingredients.length === 0
-      ) {
-        throw new ApiError(400, `Missing ingredients for recipe: ${name}`);
-      }
-
-      ingredients.forEach((ing) => {
-        if (
-          !ing.name ||
-          typeof ing.name !== "string" ||
-          !ing.quantity ||
-          typeof ing.quantity !== "string" ||
-          typeof ing.price !== "number"
-        ) {
-          throw new ApiError(400, `Invalid ingredient in recipe: ${name}`);
-        }
-      });
-
-      return {
-        recipe,
-        name,
-        price,
-        ingredients,
-      };
-    });
-
-    // ✅ Create and save the order
+    // Create a new order
     const newOrder = new Order({
       user: userId,
-      items: validatedItems,
-      totalPrice,
-      deliveryAddress,
+      ingredients: ingredients,
+      deliveryAddress: deliveryAddress,
+      totalPrice: totalPrice,
+      recipeIds: recipeIds,
+      status: "Pending", // Default status
     });
 
-    await newOrder.save();
+    // Save the order to the database
+    const savedOrder = await newOrder.save();
 
-    // ✅ Remove ordered recipes from user's shopping list
-    user.shoppingList = user.shoppingList.filter(
-      (id) => !recipeIds.includes(id.toString())
-    );
-    await user.save();
-
-    res.status(201).json({
-      message: "Order placed successfully",
-      orderId: newOrder._id,
-      totalPrice,
-      itemCount: validatedItems.length,
-    });
-
+    res.status(201).json(savedOrder);
   } catch (error) {
-    console.error("🔴 Order Creation Error:", error);
-    res
-      .status(error.statusCode || 500)
-      .json({ error: error?.message || "Internal Server Error" });
+    console.error(error);
+    res.status(500).json({ message: "Error creating order", error: error.message });
+  }
+};
+
+export const getAllOrders = async (req, res) => {
+  try {
+    const orders = await Order.find();
+    // If no orders found, return an appropriate message
+    if (orders.length === 0) {
+      return res.status(404).json({ message: "No orders found" });
+    }
+    // Return the list of orders
+    res.status(200).json(orders);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error fetching orders", error: error.message });
   }
 };

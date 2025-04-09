@@ -148,3 +148,32 @@ export const getBookmarkedRecipes = async (req, res) => {
     res.status(500).json({ error: error.message || "Failed to fetch bookmarked recipes" });
   }
 };
+
+export const getRecipeIdsByName = async (req, res) => {
+  try {
+    let { names } = req.body;
+    if (typeof names === "string") {
+      names = [names];
+    }
+
+    if (!names || names.length === 0) {
+      return res.status(400).json({ error: "At least one recipe name is required" });
+    }
+
+    console.log("Received recipe names:", names);
+    const recipes = await Recipe.find({
+      name: { $in: names.map(name => new RegExp(name, 'i')) }, 
+    }).select("_id name"); 
+
+    console.log("Recipes found:", recipes);
+    if (recipes.length === 0) {
+      return res.status(404).json({ error: "No recipes found with the provided names" });
+    }
+    const recipeIds = recipes.map(recipe => ({ id: recipe._id, name: recipe.name }));
+    res.status(200).json({ recipeIds });
+
+  } catch (error) {
+    console.error("Error fetching recipe IDs by name:", error); // Log error details
+    res.status(500).json({ error: "Error fetching recipe IDs by name" });
+  }
+};

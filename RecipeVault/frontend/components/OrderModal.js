@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useContext, useEffect } from "react";
 import {
   Modal,
   View,
@@ -8,6 +8,8 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { AuthContext } from "../context/AuthContext";
+import { fetchRecipeIdsByNames } from "../services/recipeService"; // Importing the service
 
 export default function OrderModal({
   visible,
@@ -18,6 +20,8 @@ export default function OrderModal({
   loadingPrice,
 }) {
   const navigation = useNavigation();
+  const { user } = useContext(AuthContext); // Assuming user context is set up
+  const [recipeIds, setRecipeIds] = useState([]);
 
   const groupedIngredients = selectedList.reduce((acc, item) => {
     if (!acc[item.recipeName]) {
@@ -26,6 +30,27 @@ export default function OrderModal({
     acc[item.recipeName].push(item);
     return acc;
   }, {});
+
+  const recipeNames = Object.keys(groupedIngredients); 
+  const getRecipeIds = async () => {
+    try {
+      const result = await fetchRecipeIdsByNames(recipeNames);
+      if (result && result.recipeIds) {
+        const ids = result.recipeIds.map((item) => item.id);
+        setRecipeIds(ids);
+      } else {
+        console.error("Failed to fetch recipe IDs");
+      }
+    } catch (error) {
+      console.error("Error fetching recipe IDs:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (recipeNames.length > 0) {
+      getRecipeIds(); // Fetch recipe IDs when recipeNames are available
+    }
+  }, [recipeNames]);
 
   return (
     <Modal animationType="slide" transparent={true} visible={visible}>
@@ -37,14 +62,12 @@ export default function OrderModal({
           ]}
         >
           <Text
-            style={[
-              styles.modalTitle,
-              isDarkMode && { color: "white" },
-            ]}
+            style={[styles.modalTitle, isDarkMode && { color: "white" }]}
           >
             Selected Ingredients 🧾
           </Text>
           <ScrollView style={{ maxHeight: 400 }}>
+            {/* Grouped Ingredients Section */}
             {Object.entries(groupedIngredients).map(
               ([recipeName, ingredients], idx) => (
                 <View key={idx} style={styles.recipeSection}>
@@ -94,20 +117,84 @@ export default function OrderModal({
                   Price Breakdown 💰
                 </Text>
 
+                {/* Price Breakdown Table */}
                 <View style={styles.table}>
                   <View style={styles.tableRowHeader}>
-                    <Text style={[styles.tableCell, styles.headerCell, isDarkMode && styles.headerDark]}>Ingredient</Text>
-                    <Text style={[styles.tableCell, styles.headerCell, isDarkMode && styles.headerDark]}>Qty</Text>
-                    <Text style={[styles.tableCell, styles.headerCell, isDarkMode && styles.headerDark]}>Rate</Text>
-                    <Text style={[styles.tableCell, styles.headerCell, isDarkMode && styles.headerDark]}>Price</Text>
+                    <Text
+                      style={[
+                        styles.tableCell,
+                        styles.headerCell,
+                        isDarkMode && styles.headerDark,
+                      ]}
+                    >
+                      Ingredient
+                    </Text>
+                    <Text
+                      style={[
+                        styles.tableCell,
+                        styles.headerCell,
+                        isDarkMode && styles.headerDark,
+                      ]}
+                    >
+                      Qty
+                    </Text>
+                    <Text
+                      style={[
+                        styles.tableCell,
+                        styles.headerCell,
+                        isDarkMode && styles.headerDark,
+                      ]}
+                    >
+                      Rate
+                    </Text>
+                    <Text
+                      style={[
+                        styles.tableCell,
+                        styles.headerCell,
+                        isDarkMode && styles.headerDark,
+                      ]}
+                    >
+                      Price
+                    </Text>
                   </View>
 
                   {priceDetails.items.map((item, index) => (
-                    <View key={index} style={[styles.tableRow, isDarkMode && { backgroundColor: "#2a2a2a" }]}>
-                      <Text style={[styles.tableCell, { color: isDarkMode ? "#ddd" : "#333" }]}>{item.name}</Text>
-                      <Text style={[styles.tableCell, { color: isDarkMode ? "#ddd" : "#333" }]}>{item.quantity}</Text>
-                      <Text style={[styles.tableCell, { color: isDarkMode ? "#ddd" : "#333" }]}>₹{item.pricePerUnit}</Text>
-                      <Text style={[styles.tableCell, { color: isDarkMode ? "#ddd" : "#333" }]}>₹{item.price}</Text>
+                    <View
+                      key={index}
+                      style={[styles.tableRow, isDarkMode && { backgroundColor: "#2a2a2a" }]}
+                    >
+                      <Text
+                        style={[
+                          styles.tableCell,
+                          { color: isDarkMode ? "#ddd" : "#333" },
+                        ]}
+                      >
+                        {item.name}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.tableCell,
+                          { color: isDarkMode ? "#ddd" : "#333" },
+                        ]}
+                      >
+                        {item.quantity}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.tableCell,
+                          { color: isDarkMode ? "#ddd" : "#333" },
+                        ]}
+                      >
+                        ₹{item.pricePerUnit}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.tableCell,
+                          { color: isDarkMode ? "#ddd" : "#333" },
+                        ]}
+                      >
+                        ₹{item.price}
+                      </Text>
                     </View>
                   ))}
                 </View>
@@ -118,10 +205,7 @@ export default function OrderModal({
           {!loadingPrice && priceDetails && (
             <View style={styles.totalContainer}>
               <Text
-                style={[
-                  styles.totalText,
-                  isDarkMode && { color: "#fff" },
-                ]}
+                style={[styles.totalText, isDarkMode && { color: "#fff" }]}
               >
                 Total Price: ₹{priceDetails.totalPrice.toFixed(2)}
               </Text>
@@ -139,8 +223,19 @@ export default function OrderModal({
             <TouchableOpacity
               onPress={() => {
                 onClose();
+                console.log("Recipe IDs before navigation:", recipeIds);
+                const navigationData = {
+                  calculatedIngredients: priceDetails.items,
+                  totalAmount: priceDetails.totalPrice,
+                  selectedRecipes: selectedList,
+                  recipeIds: recipeIds,
+                };
+            
+                console.log("Navigation Data: ", navigationData);
                 navigation.navigate("PaymentGateway", {
-                  price: priceDetails?.totalPrice || 0,
+                  calculatedIngredients: priceDetails.items,
+                  totalAmount: priceDetails.totalPrice,             // ✅ optional for backend
+                  recipeIds: recipeIds, // ✅ Pass recipe IDs to the payment screen
                 });
               }}
               style={[styles.button, styles.payButton]}

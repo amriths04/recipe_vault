@@ -7,6 +7,7 @@ import {
   deleteRecipe,
   toggleBookmarkRecipe,
   getBookmarkedRecipes,
+  getRecipeIdsByName
 } from "../controllers/recipeController.js";
 import { verifyJWT } from "../middleware/auth.middleware.js"; // ✅ Use your existing middleware
 
@@ -19,6 +20,7 @@ router.put("/:id", updateRecipe); // Update recipe
 router.delete("/:id", deleteRecipe); // Delete recipe
 router.post("/bookmark", verifyJWT, toggleBookmarkRecipe); // ✅ Protected route
 router.get("/bookmarked/meow", verifyJWT, getBookmarkedRecipes); // ✅ Protected route
+router.post('/ids', getRecipeIdsByName);
 
 
 export default router;
