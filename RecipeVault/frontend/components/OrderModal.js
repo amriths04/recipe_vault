@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useContext, useEffect, useCallback } from "react";
 import {
   Modal,
   View,
@@ -22,6 +22,7 @@ export default function OrderModal({
   const navigation = useNavigation();
   const { user } = useContext(AuthContext); // Assuming user context is set up
   const [recipeIds, setRecipeIds] = useState([]);
+  const [loading, setLoading] = useState(false); // Track loading state
 
   const groupedIngredients = selectedList.reduce((acc, item) => {
     if (!acc[item.recipeName]) {
@@ -31,8 +32,14 @@ export default function OrderModal({
     return acc;
   }, {});
 
-  const recipeNames = Object.keys(groupedIngredients); 
-  const getRecipeIds = async () => {
+  const recipeNames = Object.keys(groupedIngredients);
+
+  // Fetch recipe IDs only once when recipe names change
+  const getRecipeIds = useCallback(async () => {
+    if (loading || recipeNames.length === 0 || recipeIds.length > 0) return; // Fetch only if not already fetched
+    console.log("Fetching Recipe IDs...");
+    setLoading(true);
+
     try {
       const result = await fetchRecipeIdsByNames(recipeNames);
       if (result && result.recipeIds) {
@@ -43,14 +50,16 @@ export default function OrderModal({
       }
     } catch (error) {
       console.error("Error fetching recipe IDs:", error);
+    } finally {
+      setLoading(false); // Reset loading state after the request is finished
     }
-  };
+  }, [loading, recipeNames, recipeIds]); // Add recipeIds as a dependency
 
   useEffect(() => {
     if (recipeNames.length > 0) {
-      getRecipeIds(); // Fetch recipe IDs when recipeNames are available
+      getRecipeIds(); // Fetch recipe IDs only when recipeNames is available
     }
-  }, [recipeNames]);
+  }, [getRecipeIds]); // Only call when getRecipeIds changes
 
   return (
     <Modal animationType="slide" transparent={true} visible={visible}>
@@ -161,7 +170,10 @@ export default function OrderModal({
                   {priceDetails.items.map((item, index) => (
                     <View
                       key={index}
-                      style={[styles.tableRow, isDarkMode && { backgroundColor: "#2a2a2a" }]}
+                      style={[
+                        styles.tableRow,
+                        isDarkMode && { backgroundColor: "#2a2a2a" },
+                      ]}
                     >
                       <Text
                         style={[
@@ -223,15 +235,6 @@ export default function OrderModal({
             <TouchableOpacity
               onPress={() => {
                 onClose();
-                console.log("Recipe IDs before navigation:", recipeIds);
-                const navigationData = {
-                  calculatedIngredients: priceDetails.items,
-                  totalAmount: priceDetails.totalPrice,
-                  selectedRecipes: selectedList,
-                  recipeIds: recipeIds,
-                };
-            
-                console.log("Navigation Data: ", navigationData);
                 navigation.navigate("PaymentGateway", {
                   calculatedIngredients: priceDetails.items,
                   totalAmount: priceDetails.totalPrice,             // ✅ optional for backend
@@ -332,23 +335,25 @@ const styles = StyleSheet.create({
   },
   tableRowHeader: {
     flexDirection: "row",
-    backgroundColor: "#eee",
+    backgroundColor: "#f1f1f1",
   },
   tableRow: {
     flexDirection: "row",
-    backgroundColor: "#fff",
+    padding: 8,
+  },
+  headerCell: {
+    flex: 1,
+    textAlign: "center",
+    paddingVertical: 10,
   },
   tableCell: {
     flex: 1,
-    padding: 6,
     textAlign: "center",
-    fontSize: 13,
-  },
-  headerCell: {
-    fontWeight: "bold",
+    paddingVertical: 8,
+    fontSize: 14,
   },
   headerDark: {
-    backgroundColor: "#333",
-    color: "#fff",
+    backgroundColor: "#343a40",
+    color: "white",
   },
 });

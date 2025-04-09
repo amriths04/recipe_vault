@@ -73,12 +73,10 @@ export default function PaymentGatewayScreen() {
     return;
   }
   
-  console.log("Order data: ", orderData);  // Log the order data for debugging
+  console.log("Order data: ", orderData);
 
   const handlePayNow = async () => {
     const { userId, ingredients, totalAmount, recipeIds, deliveryAddress } = orderData;
-  
-    // Ensure all required fields are present
     if (!userId || !deliveryAddress || !ingredients || !totalAmount || !recipeIds) {
       Alert.alert("Error", "Missing required fields in the order data.");
       return;
@@ -114,7 +112,6 @@ export default function PaymentGatewayScreen() {
               navigation.navigate("Final");  // Navigate to the final screen if needed
             } else {
               Alert.alert("Error", result.message || "Failed to place order.");
-              console.log(result);  // Log the result to see more details
             }
           } catch (err) {
             console.error("Order error:", err);

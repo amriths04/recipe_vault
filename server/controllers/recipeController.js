@@ -162,12 +162,12 @@ export const getRecipeIdsByName = async (req, res) => {
 
     console.log("Received recipe names:", names);
     const recipes = await Recipe.find({
-      name: { $in: names.map(name => new RegExp(name, 'i')) }, 
+      name: { $in: names.map(name => new RegExp(`^${name}$`, 'i')) }, 
     }).select("_id name"); 
 
     console.log("Recipes found:", recipes);
     if (recipes.length === 0) {
-      return res.status(404).json({ error: "No recipes found with the provided names" });
+      return res.status(404).json({ error: `No recipes found for the names: ${names.join(", ")}` });
     }
     const recipeIds = recipes.map(recipe => ({ id: recipe._id, name: recipe.name }));
     res.status(200).json({ recipeIds });
