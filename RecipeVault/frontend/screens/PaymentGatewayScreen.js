@@ -28,19 +28,12 @@ const promoCodes = new Map([
 export default function PaymentGatewayScreen() {
   const navigation = useNavigation();
   const route = useRoute();
-  const { token } = useContext(AuthContext);
-  console.log(route.params);  // Log route params for debugging
+  const { user } = useContext(AuthContext);
+  console.log(route.params);
+  const userId = user?._id;
 
   const { calculatedIngredients, totalAmount, recipeIds } = route.params || {};
 
-  const orderData = {
-    ingredients: calculatedIngredients,  // Use it directly as it is
-    totalAmount: totalAmount,
-    recipeIds: recipeIds,
-    userId: "67a705115091710bf36fe8c4",  // Assuming userId is available from the context
-    deliveryAddress: "deliveryAddress" || '',  // Stubbed or passed delivery address
-  };
-  console.log("Order data: ", orderData);  // Log the order data for debugging
 
   const [selectedMethod, setSelectedMethod] = useState("");
   const [promoCode, setPromoCode] = useState("");
@@ -48,6 +41,7 @@ export default function PaymentGatewayScreen() {
   const [discountApplied, setDiscountApplied] = useState(false);
   const [discountAmount, setDiscountAmount] = useState(0);
   const [appliedCode, setAppliedCode] = useState("");
+  const [deliveryAddress, setDeliveryAddress] = useState("");
 
   const [showCardForm, setShowCardForm] = useState(false);
   const [cardDetails, setCardDetails] = useState({
@@ -66,6 +60,19 @@ export default function PaymentGatewayScreen() {
   const handleBack = () => {
     navigation.goBack();
   };
+  const orderData = {
+    ingredients: calculatedIngredients,  // Use it directly as it is
+    totalAmount: totalAmount,
+    recipeIds: recipeIds,
+    userId: userId,  // Assuming userId is available from the useContext
+    deliveryAddress: deliveryAddress,
+  };
+  if (!userId) {
+    Alert.alert("Error", "User not logged in.");
+    return;
+  }
+  
+  console.log("Order data: ", orderData);  // Log the order data for debugging
 
   const handlePayNow = async () => {
     const { userId, ingredients, totalAmount, recipeIds, deliveryAddress } = orderData;
@@ -84,7 +91,7 @@ export default function PaymentGatewayScreen() {
             // Prepare the data to send to the backend
             const orderPayload = {
               userId,
-              deliveryAddress: deliveryAddress || "",  // Default to empty string if not provided
+              deliveryAddress: deliveryAddress ,  // Default to empty string if not provided
               ingredients: ingredients,
               totalPrice: totalAmount,
               recipeIds: recipeIds,  // Ensure this is an array of valid recipe IDs
@@ -237,6 +244,17 @@ export default function PaymentGatewayScreen() {
               />
             </RadioButton.Group>
           </View>
+          <View style={styles.section}>
+  <Text style={styles.sectionTitle}>Delivery Address</Text>
+  <TextInput
+    placeholder="Enter your delivery address"
+    style={styles.input}
+    value={deliveryAddress}
+    onChangeText={(text) => setDeliveryAddress(text)}
+    multiline
+    numberOfLines={4}
+  />
+</View>
 
           {/* Promo Code Section */}
           <TouchableOpacity onPress={() => setShowPromoInput(!showPromoInput)}>
