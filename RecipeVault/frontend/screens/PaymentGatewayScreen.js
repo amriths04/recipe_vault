@@ -13,6 +13,7 @@ import {
   Modal,
   Pressable,
   Alert,
+  Image
 } from "react-native";
 import { RadioButton } from "react-native-paper";
 import { useNavigation, useRoute } from "@react-navigation/native";
@@ -177,7 +178,11 @@ export default function PaymentGatewayScreen() {
           <Modal animationType="fade" transparent={true} visible={showQRModal} onRequestClose={() => setShowQRModal(false)}>
             <Pressable style={styles.modalOverlay} onPress={() => setShowQRModal(false)}>
               <View style={styles.modalContainer}>
-                <Text style={{ marginTop: 8, color: "white" }}>Scan to Pay via UPI</Text>
+                {/* Display the QR image */}
+                <Image
+                  source={require("../assets/QR.png")}  // Make sure the image is placed inside the assets folder
+                  style={styles.qrImage}
+                />
               </View>
             </Pressable>
           </Modal>
@@ -306,7 +311,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 16,
-    paddingTop: 20,
+    paddingTop: 40,
   },
   title: {
     fontSize: 24,
@@ -320,6 +325,23 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: "600",
+  },
+  qrImage: {
+    width: 300,
+    height: 350,
+    alignSelf: "center",
+    marginVertical: 20,
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContainer: {
+    backgroundColor: "black",
+    padding: 0,
+    borderRadius: 8,
+    alignItems: "center",
   },
   addCardButton: {
     backgroundColor: "#ddd",
