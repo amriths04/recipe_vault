@@ -8,6 +8,7 @@ import recipeRoutes from "./routes/recipe.routes.js";
 import bookmarkRoutes from "./routes/bookmark.routes.js"
 import shoppingListRoutes from "./routes/shoppingList.routes.js";
 import ingredientRoutes from "./routes/ingredient.routes.js";
+import orderRoutes from "./routes/order.routes.js";
 
 dotenv.config();
 connectDB();
@@ -23,6 +24,7 @@ app.use("/api/recipes",recipeRoutes)
 app.use("/api/bookmarks", bookmarkRoutes);
 app.use("/api/shopping-list", shoppingListRoutes);
 app.use("/api/ingredients", ingredientRoutes);
+app.use("/api/orders", orderRoutes);
 app.get("/", (req, res) => {
   res.send("API is running...");
 });
