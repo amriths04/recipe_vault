@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext,useEffect } from "react";
 import {
   View,
   Text,
@@ -18,6 +18,7 @@ import {
 import { RadioButton } from "react-native-paper";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { AuthContext } from "../context/AuthContext";
+import { placeOrder } from '../services/orderService';
 
 const promoCodes = new Map([
   ["SAVE50", 50],
@@ -54,7 +55,7 @@ export default function PaymentGatewayScreen() {
   const [showQRModal, setShowQRModal] = useState(false);
 
   const deliveryFee = 20;
-  const codFee = selectedMethod === "cod" ? 15 : 0;  // COD fee if selected
+  const codFee = selectedMethod === "cod" ? 15 : 0;
   const subtotal = totalAmount;
   const total = subtotal + deliveryFee + codFee - discountAmount;
 
@@ -62,10 +63,10 @@ export default function PaymentGatewayScreen() {
     navigation.goBack();
   };
   const orderData = {
-    ingredients: calculatedIngredients,  // Use it directly as it is
-    totalAmount: totalAmount,
+    ingredients: calculatedIngredients,
+    totalAmount: total,
     recipeIds: recipeIds,
-    userId: userId,  // Assuming userId is available from the useContext
+    userId: userId,
     deliveryAddress: deliveryAddress,
   };
   if (!userId) {
@@ -81,41 +82,21 @@ export default function PaymentGatewayScreen() {
       Alert.alert("Error", "Missing required fields in the order data.");
       return;
     }
-  
+
     Alert.alert("Payment Successful", "Your payment was processed successfully.", [
       {
         text: "PAY DONE",
         onPress: async () => {
           try {
-            // Prepare the data to send to the backend
-            const orderPayload = {
-              userId,
-              deliveryAddress: deliveryAddress ,  // Default to empty string if not provided
-              ingredients: ingredients,
-              totalPrice: totalAmount,
-              recipeIds: recipeIds,  // Ensure this is an array of valid recipe IDs
-            };
-  
-            const response = await fetch('http://192.168.0.170:5000/api/orders/orders', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(orderPayload),
-            });
-  
-            const result = await response.json();
-  
-            // Handle the response
-            if (response.ok) {
-              Alert.alert("Order Placed", "Your order has been placed successfully.");
-              navigation.navigate("Final");  // Navigate to the final screen if needed
-            } else {
-              Alert.alert("Error", result.message || "Failed to place order.");
+            const response = await placeOrder(orderData);
+            
+            if (response.success) {
+              Alert.alert("Order Placed", response.message);
+              navigation.navigate("Final");  // Navigate to the final screen if the order is placed successfully
             }
-          } catch (err) {
-            console.error("Order error:", err);
-            Alert.alert("Error", err.message || "Failed to place order.");
+          } catch (error) {
+            console.error("Order error:", error);
+            Alert.alert("Error", error.message || "Failed to place order.");
           }
         },
       },
@@ -150,6 +131,31 @@ export default function PaymentGatewayScreen() {
     setAppliedCode("");
     setPromoCode("");
   };
+
+  useEffect(() => {
+    const focusListener = navigation.addListener("focus", () => {
+      // Optionally reset the state when coming back to this screen
+      setSelectedMethod("");
+      setPromoCode("");
+      setShowPromoInput(false);
+      setDiscountApplied(false);
+      setDiscountAmount(0);
+      setAppliedCode("");
+      setDeliveryAddress("");
+      setShowCardForm(false);
+      setCardDetails({
+        cardNumber: "",
+        expiry: "",
+        cvv: "",
+      });
+      setShowQRModal(false);
+    });
+
+    // Cleanup listener when the component is unmounted or the screen is blurred
+    return () => {
+      focusListener();
+    };
+  }, [navigation]);
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
@@ -309,6 +315,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
     paddingTop: 40,
+    paddningBottom:50
   },
   title: {
     fontSize: 24,
