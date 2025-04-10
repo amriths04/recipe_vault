@@ -1,5 +1,5 @@
 import Order from "../models/orderModel.js";
-
+import {User} from "../models/userModel.js"
 // Create an order
 export const createOrder = async (req, res) => {
   try {
@@ -16,13 +16,19 @@ export const createOrder = async (req, res) => {
       deliveryAddress: deliveryAddress,
       totalPrice: totalPrice,
       recipeIds: recipeIds,
-      status: "Pending", // Default status
+      status: "Pending",
+      createdAt: new Date(Date.now() + 5.5 * 60 * 60 * 1000)
+
     });
+    await newOrder.save();
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    user.shoppingList = user.shoppingList.filter(recipe => !recipeIds.includes(recipe.toString()));
+    await user.save();
 
-    // Save the order to the database
-    const savedOrder = await newOrder.save();
-
-    res.status(201).json(savedOrder);
+    res.status(201).json(newOrder);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Error creating order", error: error.message });
@@ -32,11 +38,9 @@ export const createOrder = async (req, res) => {
 export const getAllOrders = async (req, res) => {
   try {
     const orders = await Order.find();
-    // If no orders found, return an appropriate message
     if (orders.length === 0) {
       return res.status(404).json({ message: "No orders found" });
     }
-    // Return the list of orders
     res.status(200).json(orders);
   } catch (error) {
     console.error(error);
