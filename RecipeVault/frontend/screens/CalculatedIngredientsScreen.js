@@ -31,17 +31,35 @@ export default function CalculatedIngredientsScreen({ route }) {
         const multiplier = adults + kids * 0.5;
 
         const adjustedIngredients = recipe.ingredients.map((ing, idx) => {
-          const baseQty = parseFloat(ing.quantity);
-          const adjustedQty = isNaN(baseQty)
-            ? "N/A"
-            : (baseQty * multiplier).toFixed(2);
-
+          const match = ing.quantity.match(/^([\d.,\/]+)\s*(.*)$/); // e.g., "1.5 cups" => ["1.5 cups", "1.5", "cups"]
+          if (!match) {
+            return {
+              name: ing.name,
+              quantity: ing.quantity, // Leave as is
+              notes: ing.notes || "",
+            };
+          }
+        
+          let baseQty = match[1];
+          const unit = match[2];
+        
+          // Handle fractions like "1/2"
+          if (baseQty.includes("/")) {
+            const parts = baseQty.split("/");
+            baseQty = parseFloat(parts[0]) / parseFloat(parts[1]);
+          } else {
+            baseQty = parseFloat(baseQty.replace(",", ".")); // comma safety
+          }
+        
+          const adjustedQty = (baseQty * multiplier).toFixed(2);
+        
           return {
             name: ing.name,
-            quantity: adjustedQty,
+            quantity: `${adjustedQty} ${unit}`.trim(), // Keep it clean
             notes: ing.notes || "",
           };
         });
+        
 
         results.push({
           recipeId,

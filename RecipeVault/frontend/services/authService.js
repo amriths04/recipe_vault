@@ -51,15 +51,11 @@ export const loginUser = async (email, password) => {
     });
 
     const responseText = await response.text();
-    console.log("🔹 Raw Response:", responseText);
-
-    // 🔹 Check if response is valid JSON
     try {
       const jsonResponse = JSON.parse(responseText);
 
       if (!jsonResponse.accessToken) {
-        console.error("🔴 No access token in response:", jsonResponse);
-        return { error: "Invalid response from server" };
+        return { error: "Invalid Credentials" };
       }
 
       return jsonResponse;
