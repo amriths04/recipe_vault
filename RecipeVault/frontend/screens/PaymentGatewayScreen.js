@@ -91,9 +91,12 @@ export default function PaymentGatewayScreen() {
             const response = await placeOrder(orderData);
             
             if (response.success) {
-              Alert.alert("Order Placed", response.message);
-              navigation.navigate("Final");  // Navigate to the final screen if the order is placed successfully
-            }
+  Alert.alert("Order Placed", response.message);
+  navigation.navigate("Final", {
+    // orderId: response.order?._id,
+    order: response.order,
+  });
+}
           } catch (error) {
             console.error("Order error:", error);
             Alert.alert("Error", error.message || "Failed to place order.");

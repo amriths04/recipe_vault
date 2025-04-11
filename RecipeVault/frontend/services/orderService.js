@@ -67,7 +67,7 @@ export const placeOrder = async (orderData) => {
     const result = await response.json();
 
     if (response.ok) {
-      return { success: true, message: "Order placed successfully." };
+      return { success: true, message: result.message,order: result.order,};
     } else {
       throw new Error(result.message || "Failed to place order.");
     }
