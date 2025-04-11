@@ -75,3 +75,26 @@ export const placeOrder = async (orderData) => {
     throw new Error(err.message || "Failed to place order.");
   }
 };
+
+export const fetchUserOrders = async (token) => {
+  try {
+    const response = await fetch(`${API_URL}/orders/fetchusers`, {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw errorData;
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching user orders:", error.message || error);
+    throw error;
+  }
+};
