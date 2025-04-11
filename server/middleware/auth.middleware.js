@@ -2,6 +2,7 @@ import { User } from "../models/userModel.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import jwt from "jsonwebtoken";
+import Order from "../models/orderModel.js";
 
 export const verifyJWT = asyncHandler(async (req, res, next) => {
     try {
@@ -26,3 +27,20 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
         throw new ApiError(401, error?.message || "Invalid Access Token");
     }
 });
+export const getOrdersByUser = async (req, res) => {
+    try {
+      const userId = req.user._id;
+  
+      const orders = await Order.find({ user: userId });
+  
+      if (orders.length === 0) {
+        return res.status(404).json({ message: "No orders found for this user" });
+      }
+  
+      res.status(200).json(orders);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Error fetching user orders", error: error.message });
+    }
+  };
+  
