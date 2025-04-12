@@ -136,8 +136,7 @@ export default function PaymentGatewayScreen() {
   };
 
   useEffect(() => {
-    const focusListener = navigation.addListener("focus", () => {
-      // Optionally reset the state when coming back to this screen
+    const unsubscribeFocus = navigation.addListener("focus", () => {
       setSelectedMethod("");
       setPromoCode("");
       setShowPromoInput(false);
@@ -153,12 +152,22 @@ export default function PaymentGatewayScreen() {
       });
       setShowQRModal(false);
     });
-
-    // Cleanup listener when the component is unmounted or the screen is blurred
+  
+    const unsubscribeBlur = navigation.addListener("blur", () => {
+      // Clear route params when navigating away
+      navigation.setParams({
+        calculatedIngredients: null,
+        totalAmount: 0,
+        recipeIds: [],
+      });
+    });
+  
     return () => {
-      focusListener();
+      unsubscribeFocus();
+      unsubscribeBlur();
     };
   }, [navigation]);
+  
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
