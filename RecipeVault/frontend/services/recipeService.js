@@ -185,3 +185,25 @@ export const fetchRecipeIdsByNames = async (names) => {
     return { error: "Something went wrong!" };
   }
 };
+
+export const searchRecipes = async (query) => {
+  try {
+    const response = await fetch(`${API_URL}/recipes/search?query=${query}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch recipes");
+    }
+
+    const data = await response.json();
+
+    return data; // Return the matched recipes
+  } catch (error) {
+    console.error("Search error:", error);
+    throw new Error("An error occurred while searching for recipes");
+  }
+};

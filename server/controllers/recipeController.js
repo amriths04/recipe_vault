@@ -1,6 +1,7 @@
 import Recipe from "../models/recipeModel.js";
 import Bookmark from "../models/bookmarkModel.js";
 import { User } from "../models/userModel.js";
+import Fuse from 'fuse.js'
 
 
 // 📌 Create a Recipe
@@ -175,5 +176,42 @@ export const getRecipeIdsByName = async (req, res) => {
   } catch (error) {
     console.error("Error fetching recipe IDs by name:", error); // Log error details
     res.status(500).json({ error: "Error fetching recipe IDs by name" });
+  }
+};
+
+export const searchRecipes = async (req, res) => {
+  const { query } = req.query;
+
+  if (!query || !query.trim()) {
+    return res.status(400).json({ error: "Search query is required" });
+  }
+
+  try {
+    // Fetch all recipes from the database (this can be optimized further by pagination)
+    const recipes = await Recipe.find();
+
+    // Configure Fuse.js options for fuzzy searching
+    const options = {
+      includeScore: true,   // Include the match score (optional)
+      threshold: 0.3,       // Adjust threshold for fuzzy matching (lower is stricter)
+      keys: ['name'],       // We only want to search by 'name' field
+    };
+
+    const fuse = new Fuse(recipes, options);
+
+    // Perform the search using Fuse.js
+    const result = fuse.search(query);
+
+    // Extract the recipe data from the search result (Fuse returns an array of objects)
+    const results = result.map(r => r.item);
+
+    if (results.length === 0) {
+      return res.status(404).json({ message: "No recipes found" });
+    }
+
+    res.status(200).json(results);
+  } catch (error) {
+    console.error("Search error:", error);
+    res.status(500).json({ error: "Server error" });
   }
 };
