@@ -5,11 +5,11 @@ import UserIcon from "./UserIcon";
 
 const { width } = Dimensions.get("window");
 
-const Header = () => {
+const Header = ({ onSearch }) => {  // Accept onSearch as a prop
   return (
     <View style={styles.headerContainer}>
-      {/* Search Bar */}
-      <SearchBar style={styles.searchBar} />
+      {/* Pass onSearch to SearchBar */}
+      <SearchBar style={styles.searchBar} onSearch={onSearch} />
 
       {/* User Icon */}
       <UserIcon style={styles.userIcon} />

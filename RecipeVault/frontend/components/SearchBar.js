@@ -1,47 +1,28 @@
-import React, { useState } from "react";
-import { View, TextInput, TouchableOpacity, StyleSheet, Dimensions } from "react-native";
-import Icon from "react-native-vector-icons/Ionicons";
+import React from "react";
+import { TextInput, StyleSheet } from "react-native";
 
-const { width } = Dimensions.get("window");
-
-const SearchBar = ({ placeholder = "Search recipes...", onSearch, style }) => {
-  const [query, setQuery] = useState("");
-
-  const handleSearch = () => {
-    if (onSearch) {
-      onSearch(query);
-    }
+const SearchBar = ({ onSearch, style }) => {
+  const handleChange = (text) => {
+    // Call onSearch when text changes
+    onSearch(text);
   };
 
   return (
-    <View style={[styles.container, style]}>
-      <TextInput
-        style={styles.input}
-        placeholder={placeholder}
-        placeholderTextColor="#888"
-        value={query}
-        onChangeText={setQuery}
-        onSubmitEditing={handleSearch}
-      />
-      <TouchableOpacity onPress={handleSearch} style={styles.iconContainer}>
-        <Icon name="search" size={20} color="#555" />
-      </TouchableOpacity>
-    </View>
+    <TextInput
+      style={[styles.searchInput, style]}
+      placeholder="Search recipes..."
+      onChangeText={handleChange}  // Trigger search on text change
+    />
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#f0f0f0",
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    height: 45,
-    width: width * 0.75, // 75% of screen width (adjust dynamically)
-  },
-  input: {
-    flex: 1,
+  searchInput: {
+    height: 40,
+    borderColor: "#ccc",
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingLeft: 10,
     fontSize: 16,
     color: "#333",
     paddingVertical: 8,
