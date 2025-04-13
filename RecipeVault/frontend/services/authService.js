@@ -40,14 +40,19 @@ export const registerUser = async (username, email, phone, password, name, dob) 
 
 
 
-export const loginUser = async (email, password) => {
+export const loginUser = async (identifier, password) => {
   try {
+    const payload =
+      identifier.includes("@")
+        ? { email: identifier, password }
+        : { username: identifier, password };
+
     const response = await fetch(`${API_URL}/auth/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify(payload),
     });
 
     const responseText = await response.text();
@@ -68,5 +73,6 @@ export const loginUser = async (email, password) => {
     return { error: "Something went wrong!" };
   }
 };
+
 
 

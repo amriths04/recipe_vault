@@ -27,7 +27,6 @@ export const createOrder = async (req, res) => {
     }
     user.shoppingList = user.shoppingList.filter(recipe => !recipeIds.includes(recipe.toString()));
     await user.save();
-    console.log(res)
     res.status(201).json({
       success: true,
       message: "Order placed successfully",
