@@ -31,7 +31,7 @@ export default function OngoingOrdersScreen() {
         const ordersData = await fetchUserOrders(token);
         setOrders(ordersData);
       } catch (error) {
-        console.error("Error fetching orders:", error);
+        // console.error("Error fetching orders:", error);
       } finally {
         setLoading(false);
       }

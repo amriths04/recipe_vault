@@ -94,7 +94,6 @@ export const fetchUserOrders = async (token) => {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error("Error fetching user orders:", error.message || error);
     throw error;
   }
 };
