@@ -31,7 +31,7 @@ export default function PaymentGatewayScreen() {
   const navigation = useNavigation();
   const route = useRoute();
   const { user } = useContext(AuthContext);
-  console.log(route.params);
+  // console.log(route.params);
   const userId = user?._id;
 
   const { calculatedIngredients, totalAmount, recipeIds } = route.params || {};
@@ -74,7 +74,7 @@ export default function PaymentGatewayScreen() {
     return;
   }
   
-  console.log("Order data: ", orderData);
+  // console.log("Order data: ", orderData);
 
   const handlePayNow = async () => {
     const { userId, ingredients, totalAmount, recipeIds, deliveryAddress } = orderData;
@@ -98,7 +98,7 @@ export default function PaymentGatewayScreen() {
   });
 }
           } catch (error) {
-            console.error("Order error:", error);
+            // console.error("Order error:", error);
             Alert.alert("Error", error.message || "Failed to place order.");
           }
         },

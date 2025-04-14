@@ -1,10 +1,11 @@
 import React from 'react';
-import { View, Button, StyleSheet, ScrollView, Alert } from 'react-native';
-import { useRoute } from '@react-navigation/native';
+import { View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity } from 'react-native';
+import { useRoute, useNavigation } from '@react-navigation/native';
 import * as Print from 'expo-print';
 
 const FinalScreen = () => {
   const route = useRoute();
+  const navigation = useNavigation();
   const { order } = route.params;
 
   const handlePrint = async () => {
@@ -118,11 +119,24 @@ const FinalScreen = () => {
     }
   };
 
+  const handleGoToLanding = () => {
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Landing' }],
+    });
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.buttonContainer}>
-        <Button title="🖨️ Generate Printable PDF Receipt" onPress={handlePrint} />
+        <TouchableOpacity style={styles.printButton} onPress={handlePrint}>
+          <Text style={styles.printText}>🖨️ Generate Printable PDF Receipt</Text>
+        </TouchableOpacity>
       </View>
+
+      <TouchableOpacity style={styles.homeButton} onPress={handleGoToLanding}>
+        <Text style={styles.homeIcon}>🏠</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 };
@@ -135,8 +149,38 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     flexGrow: 1,
     justifyContent: 'center',
+    alignItems: 'center',
   },
   buttonContainer: {
-    marginTop: 20,
+    marginBottom: 30,
+    width: '100%',
+  },
+  printButton: {
+    backgroundColor: '#2980b9',
+    paddingVertical: 14,
+    paddingHorizontal: 25,
+    borderRadius: 12,
+  },
+  printText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  homeButton: {
+    backgroundColor: '#2ecc71',
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowOffset: { width: 2, height: 2 },
+    shadowRadius: 4,
+  },
+  homeIcon: {
+    fontSize: 34,
   },
 });
