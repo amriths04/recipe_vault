@@ -1,1 +1,1 @@
-export const API_URL = "http://192.168.137.1:5000/api";
+export const API_URL = "https://recipe-vault-backend-7use.onrender.com/api";
